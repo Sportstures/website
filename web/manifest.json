@@ -1,11 +1,11 @@
 {
-    "name": "website",
-    "short_name": "website",
+    "name": "Sportstures",
+    "short_name": "Sportstures",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0C6B2C",
+    "theme_color": "#0C6B2C",
+    "description": "Fixtures, results, standings and rankings for school sports across South Africa.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
