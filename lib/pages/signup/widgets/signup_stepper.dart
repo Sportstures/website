@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../signup_theme.dart';
+import '../../../theme/app_colors.dart';
 
 class SignupStepper extends StatelessWidget {
   const SignupStepper({super.key, required this.currentStep});
@@ -24,7 +24,7 @@ class SignupStepper extends StatelessWidget {
                   child: Container(
                     height: 1,
                     margin: const EdgeInsets.symmetric(horizontal: 8),
-                    color: i <= currentStep ? SignupColors.orange : SignupColors.border,
+                    color: i <= currentStep ? AppColors.orange : AppColors.border,
                   ),
                 ),
               _StepItem(
@@ -67,16 +67,16 @@ class _StepItem extends StatelessWidget {
           height: 20,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: reached ? SignupColors.orange : Colors.white,
+            color: reached ? AppColors.orange : Colors.white,
             shape: BoxShape.circle,
-            border: reached ? null : Border.all(color: SignupColors.border),
+            border: reached ? null : Border.all(color: AppColors.border),
           ),
           child: Text(
             '$number',
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
-              color: reached ? Colors.white : SignupColors.muted,
+              color: reached ? Colors.white : AppColors.muted,
             ),
           ),
         ),
@@ -87,7 +87,7 @@ class _StepItem extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
-              color: reached ? SignupColors.orange : SignupColors.muted,
+              color: reached ? AppColors.orange : AppColors.muted,
             ),
           ),
         ],

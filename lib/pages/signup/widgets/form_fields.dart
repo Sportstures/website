@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../signup_theme.dart';
+import '../../../theme/app_colors.dart';
 
 String? requiredValidator(String? value) =>
     (value == null || value.trim().isEmpty) ? 'Required' : null;
@@ -17,14 +17,14 @@ InputDecoration _inputDecoration({
 
   return InputDecoration(
     hintText: hint,
-    hintStyle: const TextStyle(color: SignupColors.hint, fontSize: 13),
+    hintStyle: const TextStyle(color: AppColors.muted, fontSize: 13),
     isDense: true,
     filled: true,
     fillColor: Colors.white,
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     suffixIcon: suffixIcon,
     enabledBorder: border(borderColor),
-    focusedBorder: border(SignupColors.orange, 1.5),
+    focusedBorder: border(AppColors.orange, 1.5),
     errorBorder: border(Colors.red.shade400),
     focusedErrorBorder: border(Colors.red.shade400, 1.5),
   );
@@ -48,13 +48,13 @@ class StepHeader extends StatelessWidget {
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: SignupColors.text,
+              color: AppColors.ink,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             subtitle,
-            style: const TextStyle(color: SignupColors.muted, fontSize: 12, height: 1.4),
+            style: const TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
           ),
         ],
       ),
@@ -76,7 +76,7 @@ class FieldLabel extends StatelessWidget {
         style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: SignupColors.text,
+          color: AppColors.ink,
         ),
       ),
     );
@@ -121,16 +121,16 @@ class _SignupTextFieldState extends State<SignupTextField> {
           obscureText: widget.isPassword && _obscure,
           keyboardType: widget.keyboardType,
           autofillHints: widget.autofillHints,
-          style: const TextStyle(fontSize: 13, color: SignupColors.text),
+          style: const TextStyle(fontSize: 13, color: AppColors.ink),
           decoration: _inputDecoration(
             hint: widget.hint,
-            borderColor: SignupColors.orange.withValues(alpha: 0.6),
+            borderColor: AppColors.orange.withValues(alpha: 0.6),
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(
                       _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                       size: 18,
-                      color: SignupColors.muted,
+                      color: AppColors.muted,
                     ),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   )
@@ -170,12 +170,12 @@ class SignupDropdown<T> extends StatelessWidget {
     final field = DropdownButtonFormField<T>(
       initialValue: value,
       isExpanded: true,
-      hint: Text(hint, style: const TextStyle(color: SignupColors.hint, fontSize: 13)),
-      icon: const Icon(Icons.keyboard_arrow_down, size: 18, color: SignupColors.muted),
-      style: const TextStyle(fontSize: 13, color: SignupColors.text),
+      hint: Text(hint, style: const TextStyle(color: AppColors.muted, fontSize: 13)),
+      icon: const Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.muted),
+      style: const TextStyle(fontSize: 13, color: AppColors.ink),
       borderRadius: BorderRadius.circular(8),
       dropdownColor: Colors.white,
-      decoration: _inputDecoration(borderColor: SignupColors.border),
+      decoration: _inputDecoration(borderColor: AppColors.border),
       items: [
         for (final item in items)
           DropdownMenuItem(

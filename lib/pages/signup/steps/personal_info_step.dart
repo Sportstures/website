@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../signup_form_data.dart';
-import '../signup_theme.dart';
+import '../../../theme/app_colors.dart';
 import '../widgets/form_fields.dart';
 
 class PersonalInfoStep extends StatelessWidget {
@@ -130,11 +130,11 @@ class PersonalInfoStep extends StatelessWidget {
         children: [
           Radio<Gender>(
             value: gender,
-            activeColor: SignupColors.orange,
+            activeColor: AppColors.orange,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
           ),
-          Text(label, style: const TextStyle(fontSize: 13, color: SignupColors.text)),
+          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.ink)),
         ],
       ),
     );
@@ -149,9 +149,9 @@ class PersonalInfoStep extends StatelessWidget {
         Checkbox(
           value: data.registerAsSchool,
           onChanged: (_) => toggle(),
-          activeColor: SignupColors.orange,
+          activeColor: AppColors.orange,
           shape: const CircleBorder(),
-          side: const BorderSide(color: SignupColors.border, width: 1.5),
+          side: const BorderSide(color: AppColors.border, width: 1.5),
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           visualDensity: VisualDensity.compact,
         ),
@@ -162,7 +162,7 @@ class PersonalInfoStep extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: SignupColors.text,
+              color: AppColors.ink,
             ),
           ),
         ),

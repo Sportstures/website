@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_colors.dart';
 import '../../widgets/site/site_routes.dart';
+import '../auth/auth_layout.dart';
 import 'signup_form_data.dart';
-import 'signup_theme.dart';
 import 'steps/account_setup_step.dart';
 import 'steps/personal_info_step.dart';
 import 'steps/school_details_step.dart';
-import 'widgets/signup_brand_panel.dart';
 import 'widgets/signup_stepper.dart';
 
 class SignupPage extends StatefulWidget {
@@ -50,82 +50,26 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F3F3),
-      body: Center(
-        child: Container(
-          margin: const EdgeInsets.all(24),
-          constraints: const BoxConstraints(maxWidth: 1040, maxHeight: 680),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth > 760;
-              if (isWide) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Expanded(flex: 4, child: SignupBrandPanel()),
-                    Expanded(flex: 6, child: _buildFormPanel(horizontalPadding: 48)),
-                  ],
-                );
-              }
-              // On narrow screens, just show the form
-              return _buildFormPanel(horizontalPadding: 24);
-            },
-          ),
+    return AuthLayout(
+      formMaxWidth: 560,
+      panel: const AuthBrandPanel(child: _SignupPanelContent()),
+      form: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SignupStepper(currentStep: _step),
+            const SizedBox(height: 32),
+            _buildStepContent(),
+            const SizedBox(height: 28),
+            _buildActions(),
+            const SizedBox(height: 16),
+            _buildLoginLink(),
+            const SizedBox(height: 24),
+            const _TermsNotice(),
+          ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildFormPanel({required double horizontalPadding}) {
-    return ColoredBox(
-      color: SignupColors.panel,
-      child: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(horizontalPadding, 28, horizontalPadding, 0),
-            child: SignupStepper(currentStep: _step),
-          ),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) => SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 28),
-                child: ConstrainedBox(
-                  // Vertically centre short steps; longer ones scroll.
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight - 56),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildStepContent(),
-                        const SizedBox(height: 28),
-                        _buildActions(),
-                        const SizedBox(height: 16),
-                        _buildLoginLink(),
-                        const SizedBox(height: 24),
-                        const _TermsNotice(),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -145,7 +89,7 @@ class _SignupPageState extends State<SignupPage> {
           TextButton(
             onPressed: _handleBack,
             style: TextButton.styleFrom(
-              foregroundColor: SignupColors.text,
+              foregroundColor: AppColors.ink,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             ),
             child: const Text('Back', style: TextStyle(fontWeight: FontWeight.w600)),
@@ -158,7 +102,7 @@ class _SignupPageState extends State<SignupPage> {
             child: ElevatedButton(
               onPressed: _handleNext,
               style: ElevatedButton.styleFrom(
-                backgroundColor: SignupColors.orange,
+                backgroundColor: AppColors.orange,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: const StadiumBorder(),
@@ -185,7 +129,7 @@ class _SignupPageState extends State<SignupPage> {
         children: [
           const Text(
             'Already have an account? ',
-            style: TextStyle(color: SignupColors.muted, fontSize: 12),
+            style: TextStyle(color: AppColors.muted, fontSize: 12),
           ),
           MouseRegion(
             cursor: SystemMouseCursors.click,
@@ -194,7 +138,7 @@ class _SignupPageState extends State<SignupPage> {
               child: const Text(
                 'Login',
                 style: TextStyle(
-                  color: SignupColors.orange,
+                  color: AppColors.orange,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -207,13 +151,69 @@ class _SignupPageState extends State<SignupPage> {
   }
 }
 
+class _SignupPanelContent extends StatelessWidget {
+  const _SignupPanelContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Empowering your\nschool's athletic journey.",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 30,
+            fontWeight: FontWeight.w900,
+            height: 1.25,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          "Join your school's sporting community to connect, compete, and track every "
+          'match result live.',
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.7),
+            fontSize: 13,
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 26),
+        Row(
+          children: [
+            const Text(
+              'Active Leagues',
+              style: TextStyle(
+                color: AppColors.orange,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Container(
+              width: 1,
+              height: 12,
+              margin: const EdgeInsets.symmetric(horizontal: 10),
+              color: Colors.white.withValues(alpha: 0.4),
+            ),
+            const Text(
+              '150+ Schools',
+              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class _TermsNotice extends StatelessWidget {
   const _TermsNotice();
 
   @override
   Widget build(BuildContext context) {
     const linkStyle = TextStyle(
-      color: SignupColors.text,
+      color: AppColors.ink,
       fontWeight: FontWeight.w600,
       decoration: TextDecoration.underline,
     );
@@ -222,13 +222,13 @@ class _TermsNotice extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        border: Border.all(color: SignupColors.border),
+        border: Border.all(color: AppColors.border),
         borderRadius: BorderRadius.circular(8),
       ),
       // TODO: link to the Terms & Conditions and Privacy Policy pages
       child: const Text.rich(
         TextSpan(
-          style: TextStyle(color: SignupColors.muted, fontSize: 11),
+          style: TextStyle(color: AppColors.muted, fontSize: 11),
           children: [
             TextSpan(text: 'By continuing, you agree to our '),
             TextSpan(text: 'Terms & Conditions', style: linkStyle),
