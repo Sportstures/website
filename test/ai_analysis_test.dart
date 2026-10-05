@@ -118,6 +118,105 @@ void main() {
     });
   });
 
+  group('summaries and picks', () {
+    const ai = LocalAiService();
+    final results = SportsData.instance.results;
+    final fixtures = SportsData.instance.fixtures;
+
+    test('a recap reads every match it is handed', () {
+      final recent = results.take(30).toList();
+      final summary = ai.summarizeResultsSync(recent);
+
+      expect(summary.sampleSize, recent.length);
+      expect(summary.headline, isNotEmpty);
+      expect(summary.insights, isNotEmpty);
+      expect(summary.insights.length, lessThanOrEqualTo(4));
+      for (final insight in summary.insights) {
+        expect(insight.headline, isNotEmpty);
+        expect(insight.detail, isNotEmpty);
+      }
+    });
+
+    test('a recap of nothing says so rather than inventing one', () {
+      final summary = ai.summarizeResultsSync([]);
+      expect(summary.isEmpty, isTrue);
+      expect(summary.sampleSize, 0);
+      expect(summary.insights, isEmpty);
+    });
+
+    test('a table read names the leader and counts what it read', () {
+      final football = results.where((r) => r.fixture.sport == Sport.football).toList();
+      final standings = SportsData.standingsFor(football);
+      final summary = ai.summarizeStandingsSync(standings, Sport.football);
+
+      expect(summary.headline, contains(standings.first.school.name));
+      expect(summary.insights, isNotEmpty);
+      expect(summary.insights.first.headline, contains(standings.first.school.name));
+      expect(
+        summary.sampleSize,
+        standings.fold<int>(0, (sum, standing) => sum + standing.played),
+      );
+    });
+
+    test('a table with nobody in it does not pretend to have a leader', () {
+      final summary = ai.summarizeStandingsSync([], Sport.football);
+      expect(summary.isEmpty, isTrue);
+      expect(summary.sampleSize, 0);
+    });
+
+    test('picks come back ranked, within the limit, and each says why', () {
+      final picks = ai.recommendFixturesSync(fixtures, limit: 3);
+
+      expect(picks.length, lessThanOrEqualTo(3));
+      expect(picks, isNotEmpty, reason: 'the sample data should offer something worth watching');
+      for (final pick in picks) {
+        expect(pick.reason, isNotEmpty);
+        expect(pick.score, inInclusiveRange(0, 1));
+        expect(fixtures, contains(pick.fixture));
+      }
+      for (var i = 1; i < picks.length; i++) {
+        expect(picks[i - 1].score, greaterThanOrEqualTo(picks[i].score));
+      }
+    });
+
+    test('picks skip fixtures with no form to go on', () {
+      // weak has never played, so nothing involving it can be recommended.
+      final history = [
+        for (var i = 0; i < 6; i++)
+          _played(strong, filler, 3, 1, sport: Sport.football, daysAgo: i),
+      ];
+      final picks = LocalAiService(history: history).recommendFixturesSync([
+        _upcoming(strong, weak, Sport.football),
+        _upcoming(strong, filler, Sport.football),
+      ]);
+
+      expect(picks, hasLength(1));
+      expect(picks.single.fixture.away, filler);
+    });
+
+    test('an evenly matched fixture outranks a mismatch', () {
+      final history = [
+        for (var i = 0; i < 8; i++) ...[
+          // strong and filler trade results; weak loses everything.
+          _played(strong, filler, 2, 1, sport: Sport.football, daysAgo: i * 3),
+          _played(filler, strong, 2, 1, sport: Sport.football, daysAgo: i * 3 + 1),
+          _played(filler, weak, 4, 0, sport: Sport.football, daysAgo: i * 3 + 2),
+        ],
+      ];
+      final picks = LocalAiService(history: history).recommendFixturesSync([
+        _upcoming(strong, weak, Sport.football),
+        _upcoming(strong, filler, Sport.football),
+      ], limit: 2);
+
+      expect(picks, hasLength(2));
+      expect(
+        picks.first.fixture.away,
+        filler,
+        reason: 'the close one should be the better watch',
+      );
+    });
+  });
+
   group('with a controlled history', () {
     /// A one-sided run: [strong] wins every match, [weak] loses every match,
     /// both against [filler], so neither has met the other.
@@ -211,6 +310,31 @@ void main() {
       expect(analysis.confidence, AiConfidence.low);
       expect(analysis.homeWinChance + analysis.drawChance + analysis.awayWinChance, closeTo(1, 1e-9));
       expect(analysis.factors, isNotEmpty);
+    });
+
+    test('the recap judges margins against the sport, not the raw number', () {
+      // One cricket match won by 20 runs against a football match won 4-0. In
+      // raw numbers cricket looks far more one-sided; measured against how each
+      // sport normally scores, the football result is the rout.
+      final history = [
+        for (var i = 0; i < 6; i++) ...[
+          _played(strong, filler, 150 + i * 10, 140 + i * 10, sport: Sport.cricket, daysAgo: i),
+          _played(filler, weak, 2, 1, sport: Sport.football, daysAgo: i),
+        ],
+      ];
+      final ai = LocalAiService(history: history);
+
+      final summary = ai.summarizeResultsSync([
+        _played(strong, filler, 160, 140, sport: Sport.cricket, daysAgo: 1),
+        _played(weak, filler, 4, 0, sport: Sport.football, daysAgo: 1),
+      ]);
+
+      expect(summary.sampleSize, 2);
+      expect(
+        summary.insights.first.headline,
+        contains(weak.name),
+        reason: 'the 4-0 football win should read as the most one-sided result',
+      );
     });
 
     test('an empty history still returns something sane', () {

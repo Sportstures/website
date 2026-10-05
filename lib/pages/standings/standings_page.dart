@@ -4,6 +4,7 @@ import '../../data/models.dart';
 import '../../data/sports_data.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/site/ai_summary_cards.dart';
 import '../../widgets/site/filter_controls.dart';
 import '../../widgets/site/page_hero.dart';
 import '../../widgets/site/promo_card.dart';
@@ -128,6 +129,8 @@ class _StandingsPageState extends State<StandingsPage> {
                   sidebar: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      AiStandingsReadCard(standings: standings, sport: query.sport),
+                      const SizedBox(height: 16),
                       SelectTableCard(
                         sport: query.sport,
                         ageGroup: query.ageGroup,

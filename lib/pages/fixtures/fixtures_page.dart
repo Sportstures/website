@@ -5,6 +5,7 @@ import '../../data/models.dart';
 import '../../data/sports_data.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/site/ai_analysis_view.dart';
+import '../../widgets/site/ai_picks_card.dart';
 import '../../widgets/site/filter_bar.dart';
 import '../../widgets/site/match_rows.dart';
 import '../../widgets/site/page_hero.dart';
@@ -131,6 +132,8 @@ class _FixturesPageState extends State<FixturesPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       AiAnalyzerCard(fixtures: shown),
+                      const SizedBox(height: 16),
+                      AiPicksCard(fixtures: shown),
                       const SizedBox(height: 16),
                       MonthCalendarCard(
                         selectedDay: _selectedDay,

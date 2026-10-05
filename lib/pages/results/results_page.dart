@@ -5,6 +5,7 @@ import '../../data/models.dart';
 import '../../data/sports_data.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/site/filter_bar.dart';
+import '../../widgets/site/ai_summary_cards.dart';
 import '../../widgets/site/match_rows.dart';
 import '../../widgets/site/page_hero.dart';
 import '../../widgets/site/promo_card.dart';
@@ -76,6 +77,8 @@ class _ResultsPageState extends State<ResultsPage> {
                   sidebar: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      AiResultsRecapCard(results: matching),
+                      const SizedBox(height: 16),
                       TopStandingsCard(
                         standings: SportsData.standingsFor(matching),
                         showAll: _showAllStandings,

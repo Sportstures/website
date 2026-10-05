@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import '../data/models.dart';
 
 /// How much history the analysis rests on. Shown next to every prediction so a
@@ -120,6 +122,47 @@ class MatchAnalysis {
   String get predictedScoreline => '$predictedHomeScore - $predictedAwayScore';
 }
 
+/// One observation inside a summary, e.g. "Three matches were decided by one".
+class AiInsight {
+  const AiInsight({required this.headline, required this.detail, required this.icon});
+
+  final String headline;
+  final String detail;
+  final IconData icon;
+}
+
+/// A plain-English read of a set of results or a league table.
+class AiSummary {
+  const AiSummary({
+    required this.headline,
+    required this.insights,
+    required this.sampleSize,
+  });
+
+  /// One-line takeaway, e.g. "A high-scoring week led by Lakeside Collegiate".
+  final String headline;
+
+  final List<AiInsight> insights;
+
+  /// How many matches the summary read, so the reader can weigh it.
+  final int sampleSize;
+
+  bool get isEmpty => insights.isEmpty;
+}
+
+/// A fixture the model thinks is worth watching, and why.
+class AiPick {
+  const AiPick({required this.fixture, required this.reason, required this.score});
+
+  final Fixture fixture;
+
+  /// One line on what makes this one interesting.
+  final String reason;
+
+  /// How interesting, 0-1. Used for ordering.
+  final double score;
+}
+
 /// The seam between the site and whatever is doing the thinking.
 ///
 /// [LocalAiService] implements this against the sample data that ships with the
@@ -132,4 +175,14 @@ class MatchAnalysis {
 abstract interface class AiService {
   /// Reads an upcoming fixture and returns a prediction with its reasoning.
   Future<MatchAnalysis> analyzeFixture(Fixture fixture);
+
+  /// Sums up a set of finished matches: what stood out, and how it was scored.
+  Future<AiSummary> summarizeResults(List<MatchResult> results);
+
+  /// Reads a league table the way a reporter would: who leads, by how much,
+  /// who is climbing and who is drifting.
+  Future<AiSummary> summarizeStandings(List<SchoolStanding> standings, Sport sport);
+
+  /// Picks the fixtures worth watching out of [candidates], best first.
+  Future<List<AiPick>> recommendFixtures(List<Fixture> candidates, {int limit});
 }

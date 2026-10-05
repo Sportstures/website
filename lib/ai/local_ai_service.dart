@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
+
 import '../data/models.dart';
 import '../data/sports_data.dart';
 import 'ai_service.dart';
@@ -25,6 +27,10 @@ class LocalAiService implements AiService {
   /// Recent matches read per team. Long enough to be steady, short enough that
   /// a team's current run still moves it.
   static const _formWindow = 8;
+
+  /// How many candidate fixtures recommendFixtures will analyse. Each one costs
+  /// a full pass over the history, so the pool is capped.
+  static const _pickPool = 40;
 
   @override
   Future<MatchAnalysis> analyzeFixture(Fixture fixture) async => analyzeFixtureSync(fixture);
@@ -63,6 +69,260 @@ class LocalAiService implements AiService {
       factors: _factors(fixture, homeForm, awayForm, headToHead, scale),
     );
   }
+
+  @override
+  Future<AiSummary> summarizeResults(List<MatchResult> results) async =>
+      summarizeResultsSync(results);
+
+  /// Reads a set of finished matches and says what stood out.
+  ///
+  /// Margins are compared within their own sport, so a three-goal football win
+  /// is not weighed against a three-run cricket win.
+  AiSummary summarizeResultsSync(List<MatchResult> results) {
+    if (results.isEmpty) {
+      return const AiSummary(headline: 'Nothing to read yet', insights: [], sampleSize: 0);
+    }
+
+    // Scale each sport against the full history rather than against the subset
+    // being summarised. A filter showing one cricket match would otherwise give
+    // cricket no measurable spread, and that single match would swamp the rest.
+    final all = _history ?? SportsData.instance.results;
+    final scaleBySport = <Sport, _Scale>{};
+    _Scale scaleFor(Sport sport) => scaleBySport.putIfAbsent(
+          sport,
+          () => _Scale.from(all.where((r) => r.fixture.sport == sport).toList(growable: false)),
+        );
+
+    // The most one-sided match, judged against its own sport's spread.
+    MatchResult? widest;
+    var widestMargin = 0.0;
+    for (final result in results) {
+      final margin = (result.homeScore - result.awayScore).abs() / scaleFor(result.fixture.sport).deviation;
+      if (margin > widestMargin) {
+        widestMargin = margin;
+        widest = result;
+      }
+    }
+
+    final sports = results.map((r) => r.fixture.sport).toSet();
+    final draws = results.where((r) => r.isDraw).length;
+    final oneScore = results.where((r) {
+      final margin = (r.homeScore - r.awayScore).abs();
+      return margin > 0 && margin / scaleFor(r.fixture.sport).deviation <= 0.5;
+    }).length;
+    final shutouts = results.where((r) => r.homeScore == 0 || r.awayScore == 0).length;
+
+    // Who won the most across the set.
+    final wins = <School, int>{};
+    for (final result in results) {
+      if (result.isDraw) continue;
+      final winner = result.homeWon ? result.fixture.home : result.fixture.away;
+      wins[winner] = (wins[winner] ?? 0) + 1;
+    }
+    final topWinner = wins.entries.fold<MapEntry<School, int>?>(
+      null,
+      (best, entry) => best == null || entry.value > best.value ? entry : best,
+    );
+
+    final insights = <AiInsight>[
+      if (widest != null)
+        AiInsight(
+          icon: Icons.trending_up,
+          headline: '${widest.fixture.home.name} ${widest.homeScore}-${widest.awayScore} '
+              '${widest.fixture.away.name}',
+          detail: 'The most one-sided result here, in '
+              '${widest.fixture.sport.label.toLowerCase()}.',
+        ),
+      if (topWinner != null && topWinner.value > 1)
+        AiInsight(
+          icon: Icons.emoji_events_outlined,
+          headline: '${topWinner.key.name} won ${topWinner.value} of them',
+          detail: 'More than any other school across these matches.',
+        ),
+      if (oneScore > 0)
+        AiInsight(
+          icon: Icons.compare_arrows,
+          headline: '$oneScore ${_plural(oneScore, 'match', 'matches')} came down to the wire',
+          detail: 'Decided by a margin well inside what these sports normally swing by.',
+        ),
+      if (draws > 0)
+        AiInsight(
+          icon: Icons.handshake_outlined,
+          headline: '$draws ended level',
+          detail: '${(draws / results.length * 100).round()}% of the matches read here.',
+        ),
+      if (shutouts > 0)
+        AiInsight(
+          icon: Icons.shield_outlined,
+          headline: '$shutouts ${_plural(shutouts, 'side', 'sides')} kept a clean sheet',
+          detail: 'Held their opponent scoreless.',
+        ),
+    ];
+
+    return AiSummary(
+      headline: _resultsHeadline(results, sports.length, topWinner),
+      insights: insights.take(4).toList(growable: false),
+      sampleSize: results.length,
+    );
+  }
+
+  static String _resultsHeadline(
+    List<MatchResult> results,
+    int sportCount,
+    MapEntry<School, int>? topWinner,
+  ) {
+    final matches = '${results.length} ${_plural(results.length, 'match', 'matches')}';
+    final across = sportCount == 1 ? '' : ' across $sportCount sports';
+    if (topWinner != null && topWinner.value > 2) {
+      return '$matches$across, with ${topWinner.key.name} the standout';
+    }
+    return '$matches$across, and no one side ran away with it';
+  }
+
+  @override
+  Future<AiSummary> summarizeStandings(List<SchoolStanding> standings, Sport sport) async =>
+      summarizeStandingsSync(standings, sport);
+
+  /// Reads a league table: who leads, by how much, and who is moving.
+  AiSummary summarizeStandingsSync(List<SchoolStanding> standings, Sport sport) {
+    final played = standings.where((standing) => standing.played > 0).toList(growable: false);
+    if (played.length < 2) {
+      return const AiSummary(headline: 'Not enough played yet', insights: [], sampleSize: 0);
+    }
+
+    final unit = sport.scoreLabel.toLowerCase();
+    final leader = played.first;
+    final second = played[1];
+    final gap = leader.points - second.points;
+
+    final bestAttack = played.reduce((a, b) => a.scored / a.played > b.scored / b.played ? a : b);
+    final bestDefence = played.reduce((a, b) => a.conceded / a.played < b.conceded / b.played ? a : b);
+
+    // Form over the most recent matches each side has played.
+    SchoolStanding? hottest;
+    var hottestPoints = -1.0;
+    for (final standing in played) {
+      final recent = standing.form.take(5);
+      if (recent.length < 3) continue;
+      final points = recent.fold<int>(
+            0,
+            (sum, outcome) => sum + switch (outcome) {
+              MatchOutcome.win => 3,
+              MatchOutcome.draw => 1,
+              MatchOutcome.loss => 0,
+            },
+          ) /
+          recent.length;
+      if (points > hottestPoints) {
+        hottestPoints = points;
+        hottest = standing;
+      }
+    }
+
+    final insights = <AiInsight>[
+      AiInsight(
+        icon: Icons.emoji_events_outlined,
+        headline: gap == 0
+            ? '${leader.school.name} lead on score difference'
+            : '${leader.school.name} lead by $gap ${_plural(gap, 'point', 'points')}',
+        detail: gap == 0
+            ? 'Level with ${second.school.name} on ${leader.points} points.'
+            : '${leader.points} points from ${leader.played} played, '
+                'ahead of ${second.school.name}.',
+      ),
+      if (gap <= 3)
+        AiInsight(
+          icon: Icons.local_fire_department_outlined,
+          headline: 'The title race is still live',
+          detail: 'Only $gap ${_plural(gap, 'point', 'points')} separate the top two with '
+              'matches still to play.',
+        ),
+      AiInsight(
+        icon: Icons.sports_score,
+        headline: '${bestAttack.school.name} score the most',
+        detail: '${(bestAttack.scored / bestAttack.played).toStringAsFixed(1)} $unit a game.',
+      ),
+      AiInsight(
+        icon: Icons.shield_outlined,
+        headline: '${bestDefence.school.name} concede the fewest',
+        detail: '${(bestDefence.conceded / bestDefence.played).toStringAsFixed(1)} $unit a game'
+            '${bestDefence.cleanSheets > 0 ? ', with ${bestDefence.cleanSheets} clean sheets' : ''}.',
+      ),
+      if (hottest != null && hottest != leader && hottestPoints >= 2)
+        AiInsight(
+          icon: Icons.trending_up,
+          headline: '${hottest.school.name} are the form side',
+          detail: 'Taking ${hottestPoints.toStringAsFixed(1)} points a game from their recent run.',
+        ),
+    ];
+
+    return AiSummary(
+      headline: gap <= 3
+          ? '${leader.school.name} edge it at the top, but only just'
+          : '${leader.school.name} are pulling clear',
+      insights: insights.take(4).toList(growable: false),
+      sampleSize: played.fold(0, (sum, standing) => sum + standing.played),
+    );
+  }
+
+  @override
+  Future<List<AiPick>> recommendFixtures(List<Fixture> candidates, {int limit = 4}) async =>
+      recommendFixturesSync(candidates, limit: limit);
+
+  /// Ranks fixtures by how worth watching they look.
+  ///
+  /// A good watch is a close match between two sides in decent form, ideally
+  /// with some history behind it. Scanning every candidate means running the
+  /// full analysis on each, so this reads at most [_pickPool] of them.
+  List<AiPick> recommendFixturesSync(List<Fixture> candidates, {int limit = 4}) {
+    final picks = <AiPick>[];
+
+    for (final fixture in candidates.take(_pickPool)) {
+      final analysis = analyzeFixtureSync(fixture);
+      final homeForm = analysis.homeForm;
+      final awayForm = analysis.awayForm;
+      if (homeForm.played == 0 || awayForm.played == 0) continue;
+
+      // Evenly matched sides make the better watch.
+      final closeness = 1 - (analysis.homeWinChance - analysis.awayWinChance).abs();
+      // As do two sides who are actually winning matches.
+      final quality = ((homeForm.pointsPerGame + awayForm.pointsPerGame) / 2) / 3;
+      final history = min(analysis.headToHead.meetings, 3) / 3;
+
+      picks.add(AiPick(
+        fixture: fixture,
+        score: 0.45 * closeness + 0.35 * quality + 0.2 * history,
+        reason: _pickReason(analysis, closeness, quality),
+      ));
+    }
+
+    picks.sort((a, b) => b.score.compareTo(a.score));
+    return picks.take(limit).toList(growable: false);
+  }
+
+  static String _pickReason(MatchAnalysis analysis, double closeness, double quality) {
+    final h2h = analysis.headToHead;
+    final homeForm = analysis.homeForm;
+    final awayForm = analysis.awayForm;
+
+    if (closeness > 0.9) {
+      return 'The model cannot separate them: '
+          '${(analysis.homeWinChance * 100).round()}% against '
+          '${(analysis.awayWinChance * 100).round()}%.';
+    }
+    if (quality > 0.6) {
+      return 'Two in-form sides: ${homeForm.won} wins from ${homeForm.played} against '
+          '${awayForm.won} from ${awayForm.played}.';
+    }
+    if (h2h.meetings >= 2) {
+      final last = h2h.lastMeeting;
+      return 'They have met ${h2h.meetings} times'
+          '${last == null ? '' : ', last out ${last.homeScore}-${last.awayScore}'}.';
+    }
+    return analysis.verdict;
+  }
+
+  static String _plural(int count, String one, String many) => count == 1 ? one : many;
 
   // --- the model -----------------------------------------------------------
 
