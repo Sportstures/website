@@ -4,6 +4,7 @@ import '../../../data/models.dart';
 import '../../../data/sports_data.dart';
 import '../../../theme/app_colors.dart';
 import '../../../utils/formatters.dart';
+import '../../../widgets/site/ai_analysis_view.dart';
 import '../../../widgets/site/match_rows.dart';
 import '../../../widgets/site/site_routes.dart';
 import '../../../widgets/site/site_scaffold.dart';
@@ -25,7 +26,8 @@ class FixturesAndRegionsSection extends StatelessWidget {
         children: [
           DividedColumn(
             children: [
-              for (final fixture in SportsData.instance.fixtures.take(5)) FixtureRow(fixture: fixture),
+              for (final fixture in SportsData.instance.fixtures.take(5))
+                FixtureRow(fixture: fixture, action: AnalyzeButton(fixture: fixture)),
             ],
           ),
           const SizedBox(height: 8),
