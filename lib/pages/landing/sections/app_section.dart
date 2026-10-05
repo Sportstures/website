@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../data/sports_data.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/site/photo_background.dart';
 import '../../../widgets/site/site_routes.dart';
@@ -25,17 +24,14 @@ class AppSection extends StatelessWidget {
           ),
         ),
       ),
-      overlay: const LinearGradient(colors: [Color(0x59000000), Color(0x59000000)]),
+      // Darker on the right so the copy stays legible over the lit ball.
+      overlay: const LinearGradient(colors: [Color(0x66000000), Color(0xA6000000)]),
       child: ContentWidth(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 56),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final phones = Image.asset(
-                SiteImages.appPhones,
-                height: 320,
-                errorBuilder: (_, _, _) => const _PhoneMockups(),
-              );
+              const phones = _AppPhones();
 
               final copy = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,102 +138,37 @@ class _StoreButton extends StatelessWidget {
   }
 }
 
-/// Drawn stand-in for the phone screenshots until the image is exported.
-class _PhoneMockups extends StatelessWidget {
-  const _PhoneMockups();
+/// The two app screenshots from the design, overlapping like the mockup.
+class _AppPhones extends StatelessWidget {
+  const _AppPhones();
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
-      width: 300,
-      height: 320,
+    return SizedBox(
+      width: 320,
+      height: 352,
       child: Stack(
         children: [
-          Positioned(left: 10, top: 24, child: _Phone(angle: -0.12, firstSchool: 0)),
-          Positioned(right: 10, top: 0, child: _Phone(angle: 0.08, firstSchool: 4)),
+          Positioned(
+            left: 0,
+            top: 38,
+            child: Image.asset(
+              SiteImages.appPhoneFront,
+              height: 264,
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            ),
+          ),
+          Positioned(
+            right: 0,
+            top: 0,
+            child: Image.asset(
+              SiteImages.appPhoneAngled,
+              height: 340,
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            ),
+          ),
         ],
       ),
     );
   }
-}
-
-class _Phone extends StatelessWidget {
-  const _Phone({required this.angle, required this.firstSchool});
-
-  final double angle;
-  final int firstSchool;
-
-  @override
-  Widget build(BuildContext context) {
-    final schools = SportsData.schools;
-
-    return Transform.rotate(
-      angle: angle,
-      child: Container(
-        width: 140,
-        height: 280,
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: const Color(0xFF111111),
-          borderRadius: BorderRadius.circular(26),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 20)],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: ColoredBox(
-            color: Colors.white,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  color: AppColors.green,
-                  padding: const EdgeInsets.fromLTRB(10, 18, 10, 10),
-                  child: const Text(
-                    'Sportstures',
-                    style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < 5; i++)
-                        Container(
-                          height: 30,
-                          margin: const EdgeInsets.only(bottom: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            children: [
-                              _dot(schools[(firstSchool + i * 2) % schools.length].color),
-                              Expanded(
-                                child: Container(
-                                  height: 5,
-                                  margin: const EdgeInsets.symmetric(horizontal: 6),
-                                  color: AppColors.border,
-                                ),
-                              ),
-                              _dot(schools[(firstSchool + i * 2 + 1) % schools.length].color),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  static Widget _dot(Color color) => Container(
-        width: 14,
-        height: 14,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      );
 }

@@ -3,14 +3,18 @@ import 'package:flutter/material.dart';
 abstract final class SiteImages {
   static const logo = 'assets/images/logo.png';
 
-  // Photos from the design. Export them into assets/images/ with these exact
-  // names and they appear automatically; until then each section falls back to
-  // a gradient.
-  static const heroPlayers = 'assets/images/hero_players.jpg';
+  // Photos from the design.
+  static const heroPlayers = 'assets/images/hero_players.png';
+  static const appSection = 'assets/images/app_section.png';
+  static const promoBall = 'assets/images/promo_ball.png';
+
+  /// The two app screenshots in the download section: [appPhoneAngled] sits in
+  /// front on the right, [appPhoneFront] behind it on the left.
+  static const appPhoneFront = 'assets/images/app_phone_front.png';
+  static const appPhoneAngled = 'assets/images/app_phone_angled.png';
+
+  // Still awaiting an export; these two fall back to a gradient/painter.
   static const ctaCrowd = 'assets/images/cta_crowd.png';
-  static const appSection = 'assets/images/app_section.jpg';
-  static const appPhones = 'assets/images/app_phones.png';
-  static const promoBall = 'assets/images/promo_ball.jpg';
   static const contactMap = 'assets/images/contact_map.png';
 }
 
