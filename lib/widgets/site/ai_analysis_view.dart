@@ -299,6 +299,10 @@ class _OutcomeBar extends StatelessWidget {
           child: SizedBox(
             height: 10,
             child: Row(
+              // Stretch, so the segments are given a tight height. A ColoredBox
+              // with no child takes the smallest size it is offered, and under
+              // the default centre alignment that is a height of zero.
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 for (final (chance, color, label) in segments)
                   if (chance > 0.004)
