@@ -60,7 +60,11 @@ class SiteButton extends StatelessWidget {
             Icon(icon, size: iconSize),
             const SizedBox(width: 8),
           ],
-          Text(label),
+          // Flexible so a long label in a narrow slot - a promo button in a
+          // grid cell, say - shortens instead of bursting the button open.
+          Flexible(
+            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false),
+          ),
           if (trailingIcon != null) ...[
             const SizedBox(width: 8),
             Icon(trailingIcon, size: iconSize),

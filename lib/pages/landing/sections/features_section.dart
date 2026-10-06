@@ -79,13 +79,21 @@ class _FeatureTile extends StatelessWidget {
           Text(
             title.toUpperCase(),
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.ink),
           ),
           const SizedBox(height: 8),
-          Text(
-            description,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11, color: AppColors.muted, height: 1.4),
+          // The tile is a fixed height, so cap the copy rather than let it run
+          // past the bottom. At the sizes these render at nothing is clipped.
+          Flexible(
+            child: Text(
+              description,
+              textAlign: TextAlign.center,
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 11, color: AppColors.muted, height: 1.4),
+            ),
           ),
         ],
       ),
