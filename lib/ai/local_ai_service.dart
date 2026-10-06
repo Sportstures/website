@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../data/models.dart';
 import '../data/sports_data.dart';
 import 'ai_service.dart';
+import 'local_assistant.dart';
 
 /// Reads the match history that ships with the app and turns it into a
 /// prediction with its reasoning attached.
@@ -344,6 +345,12 @@ class LocalAiService implements AiService {
   /// e.g. +1.4 or -0.8, so a margin reads as a margin.
   static String _signed(double value) =>
       '${value >= 0 ? '+' : ''}${value.toStringAsFixed(1)}';
+
+  @override
+  Future<AiAnswer> ask(String question) async => LocalAssistant(this).answer(question);
+
+  @override
+  List<String> starterQuestions() => LocalAssistant(this).starterQuestions();
 
   // --- the model -----------------------------------------------------------
 

@@ -163,6 +163,29 @@ class AiPick {
   final double score;
 }
 
+/// A question put to the assistant, and what came back.
+class AiAnswer {
+  const AiAnswer({
+    required this.text,
+    this.insights = const [],
+    this.fixture,
+    this.suggestions = const [],
+  });
+
+  /// The reply itself, in plain language.
+  final String text;
+
+  /// Supporting lines, e.g. the fixtures behind the answer.
+  final List<AiInsight> insights;
+
+  /// Set when the answer is about one match, so the reply can offer the
+  /// analyser rather than repeat it.
+  final Fixture? fixture;
+
+  /// Questions that follow naturally from this one.
+  final List<String> suggestions;
+}
+
 /// The seam between the site and whatever is doing the thinking.
 ///
 /// [LocalAiService] implements this against the sample data that ships with the
@@ -185,4 +208,10 @@ abstract interface class AiService {
 
   /// Picks the fixtures worth watching out of [candidates], best first.
   Future<List<AiPick>> recommendFixtures(List<Fixture> candidates, {int limit});
+
+  /// Answers a question about fixtures, results, tables or schools.
+  Future<AiAnswer> ask(String question);
+
+  /// A few questions to offer before anyone has asked one.
+  List<String> starterQuestions();
 }
