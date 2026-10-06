@@ -195,6 +195,12 @@ class LocalAiService implements AiService {
     final second = played[1];
     final gap = leader.points - second.points;
 
+    // A points lead means less when the sides have played a different number of
+    // matches. Comparing the rate catches a leader who is only ahead on volume.
+    final leaderRate = leader.points / leader.played;
+    final secondRate = second.points / second.played;
+    final chased = second.played < leader.played && secondRate > leaderRate;
+
     final bestAttack = played.reduce((a, b) => a.scored / a.played > b.scored / b.played ? a : b);
     final bestDefence = played.reduce((a, b) => a.conceded / a.played < b.conceded / b.played ? a : b);
 
@@ -230,7 +236,16 @@ class LocalAiService implements AiService {
             : '${leader.points} points from ${leader.played} played, '
                 'ahead of ${second.school.name}.',
       ),
-      if (gap <= 3)
+      if (chased)
+        AiInsight(
+          icon: Icons.schedule,
+          headline: '${second.school.name} have ${leader.played - second.played} '
+              '${_plural(leader.played - second.played, 'match', 'matches')} in hand',
+          detail: 'And a better return while they are at it: '
+              '${secondRate.toStringAsFixed(1)} points a game against '
+              '${leaderRate.toStringAsFixed(1)}.',
+        )
+      else if (gap <= 3)
         AiInsight(
           icon: Icons.local_fire_department_outlined,
           headline: 'The title race is still live',
@@ -257,9 +272,11 @@ class LocalAiService implements AiService {
     ];
 
     return AiSummary(
-      headline: gap <= 3
-          ? '${leader.school.name} edge it at the top, but only just'
-          : '${leader.school.name} are pulling clear',
+      headline: switch ((chased, gap <= 3)) {
+        (true, _) => '${leader.school.name} lead, but the chasers have games in hand',
+        (false, true) => '${leader.school.name} edge it at the top, but only just',
+        (false, false) => '${leader.school.name} are pulling clear',
+      },
       insights: insights.take(4).toList(growable: false),
       sampleSize: played.fold(0, (sum, standing) => sum + standing.played),
     );
@@ -323,6 +340,10 @@ class LocalAiService implements AiService {
   }
 
   static String _plural(int count, String one, String many) => count == 1 ? one : many;
+
+  /// e.g. +1.4 or -0.8, so a margin reads as a margin.
+  static String _signed(double value) =>
+      '${value >= 0 ? '+' : ''}${value.toStringAsFixed(1)}';
 
   // --- the model -----------------------------------------------------------
 
@@ -492,6 +513,29 @@ class LocalAiService implements AiService {
           '${form.school.name} lost ${form.lost} of their last ${form.played}',
           'Down to ${form.pointsPerGame.toStringAsFixed(1)} points a game over that stretch.',
           lean == AiLean.home ? AiLean.away : AiLean.home,
+        );
+      }
+    }
+
+    // The comparison the rating actually turns on. This is always a candidate
+    // and outranks the rest, because without it a single loud factor pointing
+    // the other way can end up as the only thing shown next to a call it
+    // disagrees with, which reads as a contradiction.
+    if (home.played >= 2 && away.played >= 2) {
+      final homeMargin = home.averageScored - home.averageConceded;
+      final awayMargin = away.averageScored - away.averageConceded;
+      final difference = (homeMargin - awayMargin) / scale.deviation;
+
+      if (difference.abs() >= 0.15) {
+        final ahead = difference > 0 ? home : away;
+        final behind = difference > 0 ? away : home;
+        add(
+          0.5 + difference.abs(),
+          '${ahead.school.name} carry the better margin',
+          '${_signed(ahead.averageScored - ahead.averageConceded)} $unit a game against '
+              '${_signed(behind.averageScored - behind.averageConceded)} for '
+              '${behind.school.name}.',
+          difference > 0 ? AiLean.home : AiLean.away,
         );
       }
     }

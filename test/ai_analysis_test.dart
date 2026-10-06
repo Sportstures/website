@@ -98,6 +98,29 @@ void main() {
       }
     });
 
+    test('the reasoning on show supports the call it sits next to', () {
+      // The sidebar shows only the top two factors, so it is not enough for a
+      // supporting reason to exist somewhere down the list: one has to be high
+      // enough up to be visible, or the card contradicts itself.
+      var checked = 0;
+      for (final fixture in fixtures) {
+        final analysis = ai.analyzeFixtureSync(fixture);
+        final favoured = analysis.favoured;
+        if (favoured == null) continue;
+        if (analysis.homeForm.played < 2 || analysis.awayForm.played < 2) continue;
+
+        checked++;
+        expect(
+          analysis.factors.take(2).any((factor) => factor.lean == favoured),
+          isTrue,
+          reason: '${fixture.home.name} vs ${fixture.away.name}: favours $favoured but the '
+              'top two reasons are '
+              '${analysis.factors.take(2).map((f) => '${f.headline} (${f.lean})').toList()}',
+        );
+      }
+      expect(checked, greaterThan(0));
+    });
+
     test('no sport comes out systematically skewed', () {
       // Sample scores are drawn evenly, so no sport should sit far off a
       // coin toss on average. A sport that does means its scale is wrong.
