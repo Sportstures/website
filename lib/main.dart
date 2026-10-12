@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 
 import 'pages/about/about_page.dart';
+import 'pages/auth/forgot_password_page.dart';
 import 'pages/contact/contact_page.dart';
+import 'pages/for_schools/for_schools_page.dart';
 import 'pages/fixtures/fixtures_page.dart';
 import 'pages/landing/landing_page.dart';
 import 'pages/login.dart';
 import 'pages/rankings/rankings_page.dart';
 import 'pages/results/results_page.dart';
+import 'pages/schools/school_profile_page.dart';
 import 'pages/schools/schools_page.dart';
 import 'pages/signup/signup_page.dart';
+import 'pages/sports/sport_page.dart';
+import 'pages/sports/sports_index_page.dart';
 import 'pages/standings/standings_page.dart';
+import 'pages/support/help_page.dart';
+import 'pages/support/policy_page.dart';
 import 'widgets/site/site_routes.dart';
 
 void main() {
@@ -41,6 +48,15 @@ class TobunApp extends StatelessWidget {
         SiteRoutes.contact: (_) => const ContactPage(),
         SiteRoutes.login: (_) => const LoginPage(),
         SiteRoutes.signup: (_) => const SignupPage(),
+        SiteRoutes.sports: (_) => const SportsIndexPage(),
+        SiteRoutes.sport: (_) => const SportPage(),
+        SiteRoutes.school: (_) => const SchoolProfilePage(),
+        SiteRoutes.forSchools: (_) => const ForSchoolsPage(),
+        SiteRoutes.help: (_) => const HelpPage(),
+        SiteRoutes.terms: (_) => const PolicyPage(policy: Policy.terms),
+        SiteRoutes.privacy: (_) => const PolicyPage(policy: Policy.privacy),
+        SiteRoutes.safety: (_) => const PolicyPage(policy: Policy.safety),
+        SiteRoutes.forgotPassword: (_) => const ForgotPasswordPage(),
       },
     );
   }

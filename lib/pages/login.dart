@@ -72,8 +72,7 @@ class _LoginPageState extends State<LoginPage> {
                 MouseRegion(
                   cursor: SystemMouseCursors.click,
                   child: GestureDetector(
-                    // TODO: forgot password flow
-                    onTap: () => openSiteRoute(context, null),
+                    onTap: () => openSiteRoute(context, SiteRoutes.forgotPassword),
                     child: const Text(
                       'Forgot Password?',
                       style: TextStyle(

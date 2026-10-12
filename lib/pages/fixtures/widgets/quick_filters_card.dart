@@ -39,7 +39,7 @@ class QuickFiltersCard extends StatelessWidget {
               label: 'View all sports',
               small: true,
               // TODO: open the sports directory once that page exists
-              onPressed: () => openSiteRoute(context, null),
+              onPressed: () => openSiteRoute(context, SiteRoutes.sports),
             ),
           ),
           const SizedBox(height: 4),
