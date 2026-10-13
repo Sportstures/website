@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:website/data/models.dart';
 import 'package:website/data/sports_data.dart';
+import 'package:website/config/site_links.dart';
 import 'package:website/main.dart';
+import 'package:website/pages/about/about_page.dart';
+import 'package:website/pages/landing/landing_page.dart';
 import 'package:website/pages/auth/forgot_password_page.dart';
 import 'package:website/pages/for_schools/for_schools_page.dart';
 import 'package:website/pages/schools/school_profile_page.dart';
@@ -95,6 +98,29 @@ void main() {
     });
   });
 
+  testWidgets('controls for external destinations match what is configured', (tester) async {
+    // Written against SiteLinks rather than against today's values, so filling
+    // a real address in changes the page without breaking this.
+    await _pumpPage(tester, const LandingPage(), size: const Size(1400, 3000));
+
+    expect(find.text('APP STORE'), findsOneWidget);
+    expect(find.text('GOOGLE PLAY STORE'), findsOneWidget);
+    expect(
+      find.text('Coming soon to'),
+      SiteLinks.has(SiteLinks.appStore) && SiteLinks.has(SiteLinks.playStore)
+          ? findsNothing
+          : findsWidgets,
+      reason: 'a store badge should say so until its listing exists',
+    );
+
+    await _pumpPage(tester, const AboutPage(), size: const Size(1400, 3000));
+    expect(
+      find.text('OUR STORY IN 60 SECONDS'),
+      SiteLinks.has(SiteLinks.storyVideo) ? findsOneWidget : findsNothing,
+      reason: 'the story button should only be offered when there is a film behind it',
+    );
+  });
+
   testWidgets('no footer link is a dead end', (tester) async {
     // The whole point of these pages: every link in the footer should open
     // something, rather than raising the "coming soon" notice.
@@ -129,7 +155,10 @@ void main() {
     ];
 
     for (final label in labels) {
-      await tester.pumpWidget(const TobunApp());
+      // A fresh key forces a new element tree, and so a new navigator. Pumping
+      // the same widget again would leave us on whatever the last link opened,
+      // and the auth pages carry no footer to find the next link in.
+      await tester.pumpWidget(TobunApp(key: ValueKey(label)));
       await tester.pumpAndSettle();
 
       final link = find.text(label);

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../data/models.dart';
+import '../../config/site_links.dart';
 import '../../theme/app_colors.dart';
 import 'photo_background.dart';
 import 'site_routes.dart';
@@ -140,11 +141,13 @@ class SiteFooter extends StatelessWidget {
 class _Brand extends StatelessWidget {
   const _Brand();
 
+  /// Each icon with the profile behind it. An icon whose profile is not set
+  /// yet is left out, rather than shown as something that cannot be clicked.
   static const _socials = [
-    Icons.facebook,
-    Icons.camera_alt_outlined,
-    Icons.alternate_email,
-    Icons.smart_display_outlined,
+    (Icons.facebook, SiteLinks.facebook, 'Facebook'),
+    (Icons.camera_alt_outlined, SiteLinks.instagram, 'Instagram'),
+    (Icons.alternate_email, SiteLinks.x, 'X'),
+    (Icons.smart_display_outlined, SiteLinks.youtube, 'YouTube'),
   ];
 
   @override
@@ -178,29 +181,34 @@ class _Brand extends StatelessWidget {
             Flexible(child: Text('Johannesburg, South Africa', style: bodyStyle)),
           ],
         ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            for (final icon in _socials)
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: InkWell(
-                  // TODO: link to the real social media profiles
-                  onTap: () => openSiteRoute(context, null),
-                  customBorder: const CircleBorder(),
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: const BoxDecoration(
-                      color: AppColors.orange,
-                      shape: BoxShape.circle,
+        if (_socials.any((social) => SiteLinks.has(social.$2))) ...[
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              for (final (icon, url, name) in _socials)
+                if (SiteLinks.has(url))
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Tooltip(
+                      message: name,
+                      child: InkWell(
+                        onTap: () => openExternal(context, Uri.parse(url!)),
+                        customBorder: const CircleBorder(),
+                        child: Container(
+                          width: 30,
+                          height: 30,
+                          decoration: const BoxDecoration(
+                            color: AppColors.orange,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(icon, size: 15, color: Colors.white),
+                        ),
+                      ),
                     ),
-                    child: Icon(icon, size: 15, color: Colors.white),
                   ),
-                ),
-              ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ],
     );
   }

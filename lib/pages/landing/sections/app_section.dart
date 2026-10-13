@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../config/site_links.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/site/photo_background.dart';
-import '../../../widgets/site/site_routes.dart';
 import '../../../widgets/site/site_scaffold.dart';
 
 /// "Sportstures App" download section.
@@ -64,11 +64,17 @@ class AppSection extends StatelessWidget {
                     spacing: 12,
                     runSpacing: 12,
                     children: [
-                      _StoreButton(icon: Icons.apple, caption: 'Download App On', store: 'APP STORE'),
+                      _StoreButton(
+                        icon: Icons.apple,
+                        caption: 'Download App On',
+                        store: 'APP STORE',
+                        url: SiteLinks.appStore,
+                      ),
                       _StoreButton(
                         icon: Icons.play_arrow_rounded,
                         caption: 'Get The App On',
                         store: 'GOOGLE PLAY STORE',
+                        url: SiteLinks.playStore,
                       ),
                     ],
                   ),
@@ -96,44 +102,67 @@ class AppSection extends StatelessWidget {
   }
 }
 
+/// Store badge. Opens the listing once there is one; until then it says the
+/// app is on its way, which is true, instead of looking like a broken button.
 class _StoreButton extends StatelessWidget {
-  const _StoreButton({required this.icon, required this.caption, required this.store});
+  const _StoreButton({
+    required this.icon,
+    required this.caption,
+    required this.store,
+    required this.url,
+  });
 
   final IconData icon;
   final String caption;
   final String store;
+  final String? url;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      // TODO: link to the App Store / Google Play listings once published
-      onTap: () => openSiteRoute(context, null),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.black,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: Colors.white, size: 26),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(caption, style: const TextStyle(color: Colors.white70, fontSize: 9)),
-                Text(
-                  store,
-                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-          ],
-        ),
+    final live = SiteLinks.has(url);
+
+    final badge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        border: Border.all(color: Colors.white.withValues(alpha: live ? 0.4 : 0.22)),
+        borderRadius: BorderRadius.circular(8),
       ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white.withValues(alpha: live ? 1 : 0.65), size: 26),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                live ? caption : 'Coming soon to',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: live ? 0.7 : 0.55),
+                  fontSize: 9,
+                ),
+              ),
+              Text(
+                store,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: live ? 1 : 0.65),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (!live) return Semantics(label: '$store: coming soon', child: badge);
+
+    return InkWell(
+      onTap: () => openExternal(context, Uri.parse(url!)),
+      borderRadius: BorderRadius.circular(8),
+      child: badge,
     );
   }
 }
