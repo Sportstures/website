@@ -31,6 +31,7 @@ class _SignupPageState extends State<SignupPage> {
 
   bool _submitting = false;
   bool _signedInByVerify = false;
+  bool _verifiedCoach = false;
   bool _startedWithoutCode = false;
   bool _argsRead = false;
   String? _error;
@@ -122,12 +123,15 @@ class _SignupPageState extends State<SignupPage> {
 
   void _handleVerified(AppUser? user) => setState(() {
         _signedInByVerify = user != null;
+        _verifiedCoach = user?.isCoach ?? false;
         _step = _completeStep;
       });
 
   void _handleContinue() {
     if (_signedInByVerify) {
-      Navigator.of(context).pushNamedAndRemoveUntil(SiteRoutes.home, (route) => false);
+      final navigator = Navigator.of(context);
+      navigator.pushNamedAndRemoveUntil(SiteRoutes.home, (route) => false);
+      if (_verifiedCoach) navigator.pushNamed(SiteRoutes.coach);
     } else {
       _goToLogin();
     }

@@ -200,6 +200,18 @@ class _AuthButtons extends StatelessWidget {
         runSpacing: 8,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
+          if (user.isCoach)
+            FilledButton(
+              onPressed: () => openSiteRoute(context, SiteRoutes.coach),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.green,
+                shape: shape,
+                padding: padding,
+                minimumSize: const Size(0, 36),
+                textStyle: textStyle,
+              ),
+              child: const Text('MY TEAM'),
+            ),
           Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
           OutlinedButton(
             onPressed: () async {

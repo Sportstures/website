@@ -38,9 +38,11 @@ class _LoginPageState extends State<LoginPage> {
       _needsVerification = false;
     });
     try {
-      await session.login(_emailController.text, _passwordController.text);
+      final user = await session.login(_emailController.text, _passwordController.text);
       if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil(SiteRoutes.home, (route) => false);
+      final navigator = Navigator.of(context);
+      navigator.pushNamedAndRemoveUntil(SiteRoutes.home, (route) => false);
+      if (user.isCoach) navigator.pushNamed(SiteRoutes.coach);
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {

@@ -6,6 +6,8 @@ import 'api/token_store.dart';
 import 'data/match_store.dart';
 import 'pages/about/about_page.dart';
 import 'pages/auth/forgot_password_page.dart';
+import 'pages/coach/coach_home_page.dart';
+import 'pages/coach/coach_team_page.dart';
 import 'pages/contact/contact_page.dart';
 import 'pages/for_schools/for_schools_page.dart';
 import 'pages/fixtures/fixtures_page.dart';
@@ -87,6 +89,8 @@ class _TobunAppState extends State<TobunApp> {
         SiteRoutes.sport: (_) => const SportPage(),
         SiteRoutes.school: (_) => const SchoolProfilePage(),
         SiteRoutes.forSchools: (_) => const ForSchoolsPage(),
+        SiteRoutes.coach: (_) => const CoachHomePage(),
+        SiteRoutes.coachTeam: (_) => const CoachTeamPage(),
         SiteRoutes.help: (_) => const HelpPage(),
         SiteRoutes.terms: (_) => const PolicyPage(policy: Policy.terms),
         SiteRoutes.privacy: (_) => const PolicyPage(policy: Policy.privacy),
