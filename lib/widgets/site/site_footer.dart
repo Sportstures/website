@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../../data/models.dart';
+import '../../config/site_links.dart';
 import '../../theme/app_colors.dart';
 import 'photo_background.dart';
 import 'site_routes.dart';
@@ -11,9 +13,11 @@ import 'ui_kit.dart';
 class SiteFooter extends StatelessWidget {
   const SiteFooter({super.key});
 
-  static const _linkColumns = [
+  static final _linkColumns = [
     ('Quick Links', ['Home', 'Fixtures', 'Results', 'Standings', 'Rankings', 'For Schools', 'About']),
-    ('Sports', ['Football', 'Rugby', 'Netball', 'Cricket', 'Hockey', 'Athletics', 'More Sports']),
+    // Taken from the sports the platform actually runs, so a link here can
+    // never name a sport that has no page behind it.
+    ('Sports', [...Sport.values.take(6).map((sport) => sport.label), 'More Sports']),
     (
       'For Schools',
       [
@@ -27,7 +31,15 @@ class SiteFooter extends StatelessWidget {
     ),
     (
       'Support',
-      ['Help Centre', 'Contact Us', 'Report a Problem', 'Safety & Guidelines', 'Terms & Conditions', 'FAQs'],
+      [
+        'Help Centre',
+        'Contact Us',
+        'Report a Problem',
+        'Safety & Guidelines',
+        'Terms & Conditions',
+        'Privacy Policy',
+        'FAQs',
+      ],
     ),
   ];
 
@@ -39,12 +51,35 @@ class SiteFooter extends StatelessWidget {
     'Rankings': SiteRoutes.rankings,
     'For Schools': SiteRoutes.schools,
     'About': SiteRoutes.about,
+    'More Sports': SiteRoutes.sports,
     'Register Your School': SiteRoutes.signup,
-    'Help Centre': SiteRoutes.contact,
+    // The five management links are parts of one set of tools rather than five
+    // destinations, so they share a page.
+    'Manage Teams': SiteRoutes.forSchools,
+    'Create a Match': SiteRoutes.forSchools,
+    'Post Results': SiteRoutes.forSchools,
+    'Manage Fixtures': SiteRoutes.forSchools,
+    'View Match History': SiteRoutes.forSchools,
+    'Help Centre': SiteRoutes.help,
+    'FAQs': SiteRoutes.help,
     'Contact Us': SiteRoutes.contact,
     'Report a Problem': SiteRoutes.contact,
-    'FAQs': SiteRoutes.contact,
+    'Safety & Guidelines': SiteRoutes.safety,
+    'Terms & Conditions': SiteRoutes.terms,
+    'Privacy Policy': SiteRoutes.privacy,
   };
+
+  /// A sport's name goes to the sport hub, carrying which sport to show.
+  static final _sportsByLabel = {
+    for (final sport in Sport.values) sport.label: sport,
+  };
+
+  /// Where a footer link lands, and what it takes with it.
+  static (String?, Object?) _target(String label) {
+    final sport = _sportsByLabel[label];
+    if (sport != null) return (SiteRoutes.sport, sport);
+    return (_linkRoutes[label], null);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +94,7 @@ class SiteFooter extends StatelessWidget {
                 builder: (context, constraints) {
                   final linkColumns = [
                     for (final (title, links) in _linkColumns)
-                      _LinkColumn(title: title, links: links, routes: _linkRoutes),
+                      _LinkColumn(title: title, links: links, target: _target),
                   ];
 
                   if (constraints.maxWidth >= 1000) {
@@ -106,11 +141,13 @@ class SiteFooter extends StatelessWidget {
 class _Brand extends StatelessWidget {
   const _Brand();
 
+  /// Each icon with the profile behind it. An icon whose profile is not set
+  /// yet is left out, rather than shown as something that cannot be clicked.
   static const _socials = [
-    Icons.facebook,
-    Icons.camera_alt_outlined,
-    Icons.alternate_email,
-    Icons.smart_display_outlined,
+    (Icons.facebook, SiteLinks.facebook, 'Facebook'),
+    (Icons.camera_alt_outlined, SiteLinks.instagram, 'Instagram'),
+    (Icons.alternate_email, SiteLinks.x, 'X'),
+    (Icons.smart_display_outlined, SiteLinks.youtube, 'YouTube'),
   ];
 
   @override
@@ -144,40 +181,45 @@ class _Brand extends StatelessWidget {
             Flexible(child: Text('Johannesburg, South Africa', style: bodyStyle)),
           ],
         ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            for (final icon in _socials)
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: InkWell(
-                  // TODO: link to the real social media profiles
-                  onTap: () => openSiteRoute(context, null),
-                  customBorder: const CircleBorder(),
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: const BoxDecoration(
-                      color: AppColors.orange,
-                      shape: BoxShape.circle,
+        if (_socials.any((social) => SiteLinks.has(social.$2))) ...[
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              for (final (icon, url, name) in _socials)
+                if (SiteLinks.has(url))
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Tooltip(
+                      message: name,
+                      child: InkWell(
+                        onTap: () => openExternal(context, Uri.parse(url!)),
+                        customBorder: const CircleBorder(),
+                        child: Container(
+                          width: 30,
+                          height: 30,
+                          decoration: const BoxDecoration(
+                            color: AppColors.orange,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(icon, size: 15, color: Colors.white),
+                        ),
+                      ),
                     ),
-                    child: Icon(icon, size: 15, color: Colors.white),
                   ),
-                ),
-              ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ],
     );
   }
 }
 
 class _LinkColumn extends StatelessWidget {
-  const _LinkColumn({required this.title, required this.links, required this.routes});
+  const _LinkColumn({required this.title, required this.links, required this.target});
 
   final String title;
   final List<String> links;
-  final Map<String, String> routes;
+  final (String?, Object?) Function(String label) target;
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +235,10 @@ class _LinkColumn extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 9),
             child: InkWell(
-              onTap: () => openSiteRoute(context, routes[link]),
+              onTap: () {
+                final (route, arguments) = target(link);
+                openSiteRoute(context, route, arguments: arguments);
+              },
               child: Text(
                 link,
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12),

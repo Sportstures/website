@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'ai_assistant.dart';
 import 'site_footer.dart';
 import 'site_header.dart';
 
@@ -15,16 +16,27 @@ class SiteScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       endDrawer: SiteDrawer(currentRoute: currentRoute),
-      body: Column(
+      body: Stack(
         children: [
-          SiteHeader(currentRoute: currentRoute),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [...children, const SiteFooter()],
+          Column(
+            children: [
+              SiteHeader(currentRoute: currentRoute),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [...children, const SiteFooter()],
+                  ),
+                ),
               ),
-            ),
+            ],
+          ),
+          // Sits above the page on every route, so a question can be asked
+          // from wherever the visitor happens to be.
+          const Positioned(
+            right: 0,
+            bottom: 0,
+            child: AiAssistantLauncher(),
           ),
         ],
       ),

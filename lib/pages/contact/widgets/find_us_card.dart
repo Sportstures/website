@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../config/site_links.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/site/photo_background.dart';
-import '../../../widgets/site/site_routes.dart';
 import '../../../widgets/site/ui_kit.dart';
 import 'contact_card.dart';
 
@@ -45,8 +45,7 @@ class FindUsCard extends StatelessWidget {
             trailingIcon: Icons.arrow_forward,
             variant: SiteButtonVariant.outlineOrange,
             small: true,
-            // TODO: open Google Maps (needs the url_launcher package)
-            onPressed: () => openSiteRoute(context, null),
+            onPressed: () => openExternal(context, SiteLinks.officeOnMap),
           ),
         ],
       ),

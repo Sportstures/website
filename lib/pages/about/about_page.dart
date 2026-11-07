@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/sports_data.dart';
+import '../../config/site_links.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/site/page_hero.dart';
@@ -103,15 +104,18 @@ class _OurStory extends StatelessWidget {
           'showcase talent and bring communities together.',
           style: bodyStyle,
         ),
-        const SizedBox(height: 24),
-        SiteButton(
-          label: 'OUR STORY IN 60 SECONDS',
-          icon: Icons.play_circle_outline,
-          variant: SiteButtonVariant.outline,
-          small: true,
-          // TODO: play the story video once it's available
-          onPressed: () => openSiteRoute(context, null),
-        ),
+        // Hidden until there is a film to play. Offering to show someone a
+        // sixty-second story and then not having one is worse than not asking.
+        if (SiteLinks.has(SiteLinks.storyVideo)) ...[
+          const SizedBox(height: 24),
+          SiteButton(
+            label: 'OUR STORY IN 60 SECONDS',
+            icon: Icons.play_circle_outline,
+            variant: SiteButtonVariant.outline,
+            small: true,
+            onPressed: () => openExternal(context, Uri.parse(SiteLinks.storyVideo!)),
+          ),
+        ],
       ],
     );
 

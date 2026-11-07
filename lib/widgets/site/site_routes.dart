@@ -11,6 +11,24 @@ abstract final class SiteRoutes {
   static const contact = '/contact';
   static const login = '/login';
   static const signup = '/signup';
+
+  /// Index of every sport.
+  static const sports = '/sports';
+
+  /// One sport's hub. Takes a [Sport] as its argument.
+  static const sport = '/sport';
+
+  /// One school's profile. Takes a [School] as its argument.
+  static const school = '/school';
+
+  /// What a registered school gets: the management tools.
+  static const forSchools = '/for-schools';
+
+  static const help = '/help';
+  static const terms = '/terms';
+  static const privacy = '/privacy';
+  static const safety = '/safety';
+  static const forgotPassword = '/forgot-password';
 }
 
 class NavItem {

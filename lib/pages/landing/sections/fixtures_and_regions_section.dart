@@ -4,6 +4,8 @@ import '../../../data/models.dart';
 import '../../../data/sports_data.dart';
 import '../../../theme/app_colors.dart';
 import '../../../utils/formatters.dart';
+import '../../../widgets/site/ai_analysis_view.dart';
+import '../../../widgets/site/ai_picks_card.dart';
 import '../../../widgets/site/match_rows.dart';
 import '../../../widgets/site/site_routes.dart';
 import '../../../widgets/site/site_scaffold.dart';
@@ -25,7 +27,8 @@ class FixturesAndRegionsSection extends StatelessWidget {
         children: [
           DividedColumn(
             children: [
-              for (final fixture in SportsData.instance.fixtures.take(5)) FixtureRow(fixture: fixture),
+              for (final fixture in SportsData.instance.fixtures.take(5))
+                FixtureRow(fixture: fixture, action: AnalyzeButton(fixture: fixture)),
             ],
           ),
           const SizedBox(height: 8),
@@ -53,6 +56,10 @@ class FixturesAndRegionsSection extends StatelessWidget {
       ),
     );
 
+    // Reads the soonest fixtures rather than the whole season, which is all
+    // the picks need and keeps the work off the landing page's critical path.
+    final picks = AiPicksCard(fixtures: SportsData.instance.fixtures.take(20).toList());
+
     return ContentWidth(
       child: Padding(
         padding: const EdgeInsets.only(bottom: 56),
@@ -64,11 +71,24 @@ class FixturesAndRegionsSection extends StatelessWidget {
                 children: [
                   Expanded(child: upcoming),
                   const SizedBox(width: 20),
-                  Expanded(child: regions),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [regions, const SizedBox(height: 20), picks],
+                    ),
+                  ),
                 ],
               );
             }
-            return Column(children: [upcoming, const SizedBox(height: 20), regions]);
+            return Column(
+              children: [
+                upcoming,
+                const SizedBox(height: 20),
+                regions,
+                const SizedBox(height: 20),
+                picks,
+              ],
+            );
           },
         ),
       ),

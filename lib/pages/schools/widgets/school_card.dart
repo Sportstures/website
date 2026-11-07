@@ -75,8 +75,7 @@ class SchoolCard extends StatelessWidget {
             variant: SiteButtonVariant.outline,
             small: true,
             expand: true,
-            // TODO: open the school profile page once it's designed
-            onPressed: () => openSiteRoute(context, null),
+            onPressed: () => openSiteRoute(context, SiteRoutes.school, arguments: school),
           ),
         ],
       ),

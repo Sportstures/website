@@ -4,6 +4,8 @@ import '../../data/match_filters.dart';
 import '../../data/models.dart';
 import '../../data/sports_data.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/site/ai_analysis_view.dart';
+import '../../widgets/site/ai_picks_card.dart';
 import '../../widgets/site/filter_bar.dart';
 import '../../widgets/site/match_rows.dart';
 import '../../widgets/site/page_hero.dart';
@@ -11,6 +13,7 @@ import '../../widgets/site/promo_card.dart';
 import '../../widgets/site/site_routes.dart';
 import '../../widgets/site/site_scaffold.dart';
 import '../../widgets/site/ui_kit.dart';
+import 'widgets/ai_analyzer_card.dart';
 import 'widgets/date_strip.dart';
 import 'widgets/month_calendar_card.dart';
 import 'widgets/quick_filters_card.dart';
@@ -128,6 +131,10 @@ class _FixturesPageState extends State<FixturesPage> {
                   sidebar: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      AiAnalyzerCard(fixtures: shown),
+                      const SizedBox(height: 16),
+                      AiPicksCard(fixtures: shown),
+                      const SizedBox(height: 16),
                       MonthCalendarCard(
                         selectedDay: _selectedDay,
                         markedDays: {for (final f in matching) DateUtils.dateOnly(f.startsAt)},
@@ -174,7 +181,10 @@ class _FixturesPageState extends State<FixturesPage> {
               title: formatLongDate(day),
               trailing: CountLabel(count: dayCounts[day]!.length, noun: 'fixture'),
               child: DividedColumn(
-                children: [for (final fixture in fixtures) FixtureRow(fixture: fixture)],
+                children: [
+                  for (final fixture in fixtures)
+                    FixtureRow(fixture: fixture, action: AnalyzeButton(fixture: fixture)),
+                ],
               ),
             ),
           ),

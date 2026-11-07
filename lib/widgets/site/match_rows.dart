@@ -199,9 +199,13 @@ class _DateBadge extends StatelessWidget {
 }
 
 class FixtureRow extends StatelessWidget {
-  const FixtureRow({super.key, required this.fixture});
+  const FixtureRow({super.key, required this.fixture, this.action});
 
   final Fixture fixture;
+
+  /// Optional control shown under the status pill, e.g. the AI analyse button.
+  /// Passed in rather than built here so this stays free of page-level imports.
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -240,6 +244,7 @@ class FixtureRow extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               const StatusPill('Upcoming', color: AppColors.green),
+              if (action != null) ...[const SizedBox(height: 6), action!],
             ],
           ),
         ],

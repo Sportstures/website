@@ -27,19 +27,33 @@ class SiteHeader extends StatelessWidget {
         child: Row(
           children: [
             const SiteLogo(),
-            const Spacer(),
-            if (compact)
+            if (compact) ...[
+              const Spacer(),
               IconButton(
                 tooltip: 'Menu',
                 icon: const Icon(Icons.menu, color: AppColors.ink),
                 onPressed: () => Scaffold.of(context).openEndDrawer(),
-              )
-            else ...[
-              for (final item in siteNavItems)
-                _NavLink(item: item, active: item.route == currentRoute),
-              const SizedBox(width: 16),
-              const _AuthButtons(),
-            ],
+              ),
+            ] else
+              // Just above the breakpoint the links fill the content width
+              // exactly, and anything that widens them - a longer label, a
+              // larger system text scale - pushes the row over. Scaling down
+              // rather than overflowing keeps the bar intact; at ordinary
+              // widths there is room, so nothing is scaled.
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    children: [
+                      for (final item in siteNavItems)
+                        _NavLink(item: item, active: item.route == currentRoute),
+                      const SizedBox(width: 16),
+                      const _AuthButtons(),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),
