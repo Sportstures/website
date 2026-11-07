@@ -6,6 +6,7 @@ import '../../theme/app_colors.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/site/ai_summary_cards.dart';
 import '../../widgets/site/filter_controls.dart';
+import '../../widgets/site/match_data_builder.dart';
 import '../../widgets/site/page_hero.dart';
 import '../../widgets/site/promo_card.dart';
 import '../../widgets/site/site_routes.dart';
@@ -30,20 +31,62 @@ enum StandingsView {
 
 typedef StandingsQuery = ({Sport sport, String? ageGroup, String? region, String? league, int season});
 
-class StandingsPage extends StatefulWidget {
+class StandingsPage extends StatelessWidget {
   const StandingsPage({super.key});
 
   @override
-  State<StandingsPage> createState() => _StandingsPageState();
+  Widget build(BuildContext context) {
+    return MatchDataBuilder(
+      currentRoute: SiteRoutes.standings,
+      title: 'Standings',
+      subtitle: 'See how schools are performing in their regions and sports this season.',
+      builder: (context, data) => _StandingsView(data: data),
+    );
+  }
 }
 
-class _StandingsPageState extends State<StandingsPage> {
+class _StandingsView extends StatefulWidget {
+  const _StandingsView({required this.data});
+
+  final SportsData data;
+
+  @override
+  State<_StandingsView> createState() => _StandingsViewState();
+}
+
+class _StandingsViewState extends State<_StandingsView> {
   // Draft filter values; they only take effect when FILTER is pressed.
-  var _sport = Sport.football;
-  String? _ageGroup = 'U/19';
+  late var _sport = _defaultSport;
+  late String? _ageGroup = _defaultAgeGroup;
   String? _region;
   String? _league;
-  var _season = SportsData.instance.seasons.first;
+  late var _season = widget.data.seasonOptions.first;
+
+  /// Football for the sample data. For real data, the sport with the most results, so the
+  /// page opens on a table that has something in it.
+  Sport get _defaultSport {
+    if (widget.data.isSample || widget.data.results.isEmpty) return Sport.football;
+    final counts = <Sport, int>{};
+    for (final r in widget.data.results) {
+      counts.update(r.fixture.sport, (n) => n + 1, ifAbsent: () => 1);
+    }
+    return (counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value))).first.key;
+  }
+
+  /// U/19 when the data has it, otherwise every age group.
+  String? get _defaultAgeGroup => widget.data.ageGroupOptions.contains('U/19') ? 'U/19' : null;
+
+  /// Every (sport, age group) that has results, most results first. Null for the sample data,
+  /// whose card keeps its built-in suggestions.
+  ({List<(Sport, String)> popular, List<(Sport, String)> all})? get _tables {
+    if (widget.data.isSample) return null;
+    final counts = <(Sport, String), int>{};
+    for (final r in widget.data.results) {
+      counts.update((r.fixture.sport, r.fixture.ageGroup), (n) => n + 1, ifAbsent: () => 1);
+    }
+    final all = (counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value))).map((e) => e.key).toList();
+    return (popular: all.take(5).toList(), all: all);
+  }
 
   late StandingsQuery _applied = _draft;
   var _view = StandingsView.leagueTable;
@@ -55,11 +98,11 @@ class _StandingsPageState extends State<StandingsPage> {
 
   void _reset() {
     setState(() {
-      _sport = Sport.football;
-      _ageGroup = 'U/19';
+      _sport = _defaultSport;
+      _ageGroup = _defaultAgeGroup;
       _region = null;
       _league = null;
-      _season = SportsData.instance.seasons.first;
+      _season = widget.data.seasonOptions.first;
       _applied = _draft;
     });
   }
@@ -75,7 +118,7 @@ class _StandingsPageState extends State<StandingsPage> {
   @override
   Widget build(BuildContext context) {
     final query = _applied;
-    final results = SportsData.instance.results.where((result) {
+    final results = widget.data.results.where((result) {
       final fixture = result.fixture;
       return fixture.sport == query.sport &&
           (query.ageGroup == null || fixture.ageGroup == query.ageGroup) &&
@@ -135,6 +178,8 @@ class _StandingsPageState extends State<StandingsPage> {
                         sport: query.sport,
                         ageGroup: query.ageGroup,
                         onSelect: _selectTable,
+                        popular: _tables?.popular,
+                        all: _tables?.all,
                       ),
                       const SizedBox(height: 16),
                       TopPerformersCard(sport: query.sport, standings: standings),
@@ -169,7 +214,7 @@ class _StandingsPageState extends State<StandingsPage> {
           label: 'Age Group',
           child: FilterDropdown<String>(
             value: _ageGroup,
-            options: SportsData.ageGroups,
+            options: widget.data.ageGroupOptions,
             labelOf: (age) => age,
             allLabel: 'All Age Groups',
             onChanged: (value) => setState(() => _ageGroup = value),
@@ -179,7 +224,7 @@ class _StandingsPageState extends State<StandingsPage> {
           label: 'Region',
           child: FilterDropdown<String>(
             value: _region,
-            options: SportsData.regions,
+            options: widget.data.regionOptions,
             labelOf: (region) => region,
             allLabel: 'All Regions',
             onChanged: (value) => setState(() => _region = value),
@@ -190,7 +235,7 @@ class _StandingsPageState extends State<StandingsPage> {
           flex: 3,
           child: FilterDropdown<String>(
             value: _league,
-            options: SportsData.leagues,
+            options: widget.data.leagueOptions,
             labelOf: (league) => league,
             allLabel: 'All Competitions',
             onChanged: (value) => setState(() => _league = value),
@@ -200,7 +245,7 @@ class _StandingsPageState extends State<StandingsPage> {
           label: 'Season',
           child: FilterDropdown<int>(
             value: _season,
-            options: SportsData.instance.seasons,
+            options: widget.data.seasonOptions,
             labelOf: (year) => '$year Season',
             onChanged: (value) => setState(() => _season = value ?? _season),
           ),

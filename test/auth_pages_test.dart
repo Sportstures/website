@@ -7,6 +7,7 @@ import 'package:http/testing.dart';
 import 'package:website/api/api_client.dart';
 import 'package:website/api/session.dart';
 import 'package:website/main.dart';
+import 'package:website/data/match_store.dart';
 import 'package:website/pages/signup/signup_form_data.dart';
 
 http.Response _json(int status, Object body) =>
@@ -40,7 +41,7 @@ Future<_Fake> _pumpApp(WidgetTester tester, http.Response Function(http.Request)
       return fake.respond(request);
     }),
   );
-  await tester.pumpWidget(TobunApp(session: Session(api)));
+  await tester.pumpWidget(TobunApp(session: Session(api), matches: MatchStore.sample()));
   await tester.pumpAndSettle();
   return fake;
 }
@@ -202,7 +203,7 @@ void main() {
         baseUrl: 'http://api.test',
         httpClient: MockClient((r) async => throw http.ClientException('down')),
       );
-      await tester.pumpWidget(TobunApp(session: Session(api)));
+      await tester.pumpWidget(TobunApp(session: Session(api), matches: MatchStore.sample()));
       await tester.pumpAndSettle();
       await _openLogin(tester);
       await _logIn(tester, 'a@b.com', 'x');

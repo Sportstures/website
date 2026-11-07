@@ -26,6 +26,16 @@ Everything lives in `lib/api/`:
 - `session.dart`: who is signed in (`Session`), reached from any page with `SessionScope.of(context)`.
 - `token_store.dart`: where the tokens are kept (browser local storage, so a reload keeps you signed in).
 
+## Which pages use live data
+
+Fixtures, Results and Standings read from the backend (public, no login needed). Everything else on the site
+(landing page, schools, rankings, sport pages, the Ask Sportstures assistant) still shows built-in sample data
+until it is moved over. To see the live pages with something in them, fill your development database with the
+demo league: in `Sportstures-backend` run `npm run seed:demo`.
+
+A school's region on these pages is its **province** (the backend has no finer region). Matches in a sport the
+site has no page for are left out. Data is cached for two minutes.
+
 ## Tests
 
 `flutter test`. The API tests use a fake server, so they need no backend running.

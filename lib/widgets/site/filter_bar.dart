@@ -15,11 +15,15 @@ class FilterBar extends StatefulWidget {
     required this.searchLabel,
     required this.filters,
     required this.onApply,
+    this.regions,
   });
 
   final String searchLabel;
   final MatchFilters filters;
   final ValueChanged<MatchFilters> onApply;
+
+  /// The regions to offer. Defaults to the sample data's regions.
+  final List<String>? regions;
 
   @override
   State<FilterBar> createState() => _FilterBarState();
@@ -115,7 +119,7 @@ class _FilterBarState extends State<FilterBar> {
           label: 'Region',
           child: FilterDropdown<String>(
             value: _region,
-            options: SportsData.regions,
+            options: widget.regions ?? SportsData.regions,
             labelOf: (region) => region,
             allLabel: 'All Regions',
             onChanged: (value) => setState(() => _region = value),

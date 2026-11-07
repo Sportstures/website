@@ -11,11 +11,17 @@ class SelectTableCard extends StatefulWidget {
     required this.sport,
     required this.ageGroup,
     required this.onSelect,
+    this.popular,
+    this.all,
   });
 
   final Sport sport;
   final String? ageGroup;
   final void Function(Sport sport, String ageGroup) onSelect;
+
+  /// The tables to suggest, and all of them. When null the card shows its built-in suggestions.
+  final List<(Sport, String)>? popular;
+  final List<(Sport, String)>? all;
 
   @override
   State<SelectTableCard> createState() => _SelectTableCardState();
@@ -34,7 +40,9 @@ class _SelectTableCardState extends State<SelectTableCard> {
 
   @override
   Widget build(BuildContext context) {
-    final tables = _showAll ? [for (final sport in Sport.values) (sport, 'U/19')] : _popular;
+    final tables = _showAll
+        ? (widget.all ?? [for (final sport in Sport.values) (sport, 'U/19')])
+        : (widget.popular ?? _popular);
 
     return SectionCard(
       title: 'Select another table',
