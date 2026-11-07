@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:website/main.dart';
+import 'package:website/data/match_store.dart';
 
 Future<void> _pick(WidgetTester tester, String hint, String option) async {
   await tester.tap(find.text(hint));
@@ -24,7 +25,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(const TobunApp());
+    await tester.pumpWidget(TobunApp(matches: MatchStore.sample()));
     expect(find.text('UPCOMING FIXTURES'), findsOneWidget);
 
     await tester.tap(find.text('Fixtures').first);
@@ -63,7 +64,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(const TobunApp());
+    await tester.pumpWidget(TobunApp(matches: MatchStore.sample()));
     await tester.tap(find.text('LOGIN'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Register and Sign up'));

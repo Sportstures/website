@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'api/api_client.dart';
 import 'api/session.dart';
 import 'api/token_store.dart';
+import 'data/match_store.dart';
 import 'pages/about/about_page.dart';
 import 'pages/auth/forgot_password_page.dart';
 import 'pages/contact/contact_page.dart';
@@ -28,9 +29,12 @@ void main() {
 
 class TobunApp extends StatefulWidget {
   /// Pass a [session] to run against a different backend or token store (tests do).
-  const TobunApp({super.key, this.session});
+  /// Pass [matches] to change where fixtures and results come from; `MatchStore.sample()`
+  /// uses the built-in sample data and never calls the backend.
+  const TobunApp({super.key, this.session, this.matches});
 
   final Session? session;
+  final MatchStore? matches;
 
   @override
   State<TobunApp> createState() => _TobunAppState();
@@ -39,6 +43,7 @@ class TobunApp extends StatefulWidget {
 class _TobunAppState extends State<TobunApp> {
   late final Session _session =
       widget.session ?? Session(ApiClient(tokenStore: PrefsTokenStore()));
+  late final MatchStore _matches = widget.matches ?? MatchStore.api(_session.api);
 
   @override
   void initState() {
@@ -50,7 +55,10 @@ class _TobunAppState extends State<TobunApp> {
   Widget build(BuildContext context) {
     return SessionScope(
       session: _session,
-      child: _buildApp(),
+      child: MatchScope(
+        store: _matches,
+        child: _buildApp(),
+      ),
     );
   }
 

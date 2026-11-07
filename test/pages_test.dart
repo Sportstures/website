@@ -4,6 +4,7 @@ import 'package:website/data/models.dart';
 import 'package:website/data/sports_data.dart';
 import 'package:website/config/site_links.dart';
 import 'package:website/main.dart';
+import 'package:website/data/match_store.dart';
 import 'package:website/pages/about/about_page.dart';
 import 'package:website/pages/landing/landing_page.dart';
 import 'package:website/pages/auth/forgot_password_page.dart';
@@ -128,7 +129,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(const TobunApp());
+    await tester.pumpWidget(TobunApp(matches: MatchStore.sample()));
     await tester.pumpAndSettle();
 
     final labels = <String>[
@@ -158,7 +159,7 @@ void main() {
       // A fresh key forces a new element tree, and so a new navigator. Pumping
       // the same widget again would leave us on whatever the last link opened,
       // and the auth pages carry no footer to find the next link in.
-      await tester.pumpWidget(TobunApp(key: ValueKey(label)));
+      await tester.pumpWidget(TobunApp(key: ValueKey(label), matches: MatchStore.sample()));
       await tester.pumpAndSettle();
 
       final link = find.text(label);

@@ -6,6 +6,7 @@ import '../../data/sports_data.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/site/filter_bar.dart';
 import '../../widgets/site/ai_summary_cards.dart';
+import '../../widgets/site/match_data_builder.dart';
 import '../../widgets/site/match_rows.dart';
 import '../../widgets/site/page_hero.dart';
 import '../../widgets/site/promo_card.dart';
@@ -16,14 +17,30 @@ import 'widgets/results_period.dart';
 import 'widgets/results_summary_card.dart';
 import 'widgets/top_standings_card.dart';
 
-class ResultsPage extends StatefulWidget {
+class ResultsPage extends StatelessWidget {
   const ResultsPage({super.key});
 
   @override
-  State<ResultsPage> createState() => _ResultsPageState();
+  Widget build(BuildContext context) {
+    return MatchDataBuilder(
+      currentRoute: SiteRoutes.results,
+      title: 'Results',
+      subtitle: 'Catch up on the latest school results across South Africa.',
+      builder: (context, data) => _ResultsView(data: data),
+    );
+  }
 }
 
-class _ResultsPageState extends State<ResultsPage> {
+class _ResultsView extends StatefulWidget {
+  const _ResultsView({required this.data});
+
+  final SportsData data;
+
+  @override
+  State<_ResultsView> createState() => _ResultsViewState();
+}
+
+class _ResultsViewState extends State<_ResultsView> {
   static const _pageSize = 10;
 
   var _filters = const MatchFilters();
@@ -34,7 +51,7 @@ class _ResultsPageState extends State<ResultsPage> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final matching = SportsData.instance.results
+    final matching = widget.data.results
         .where((r) => _filters.matches(r.fixture) && _period.contains(r.fixture.startsAt, now))
         .toList();
 
@@ -55,6 +72,7 @@ class _ResultsPageState extends State<ResultsPage> {
                 FilterBar(
                   searchLabel: 'Search results',
                   filters: _filters,
+                  regions: widget.data.regionOptions,
                   onApply: (filters) => setState(() {
                     _filters = filters;
                     _visibleCount = _pageSize;
@@ -100,6 +118,14 @@ class _ResultsPageState extends State<ResultsPage> {
   }
 
   Widget _buildResultList(List<MatchResult> matching) {
+    if (widget.data.results.isEmpty) {
+      return const SectionCard(
+        title: 'Results',
+        trailing: CountLabel(count: 0, noun: 'result'),
+        child: EmptyState('No results have been recorded yet. Check back after the next matches.'),
+      );
+    }
+
     if (matching.isEmpty) {
       return SectionCard(
         title: _period.label,

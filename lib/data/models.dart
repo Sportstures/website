@@ -17,6 +17,16 @@ enum Sport {
 
   /// What a score counts in this sport, e.g. Goals or Runs.
   final String scoreLabel;
+
+  /// The sport the backend calls [name] ("Football", "soccer"...), or null if the site has no page for it.
+  static Sport? fromName(String? name) {
+    final wanted = (name ?? '').trim().toLowerCase();
+    if (wanted == 'soccer') return football;
+    for (final sport in values) {
+      if (sport.label.toLowerCase() == wanted) return sport;
+    }
+    return null;
+  }
 }
 
 enum SchoolType {
@@ -69,7 +79,15 @@ class Fixture {
     required this.home,
     required this.away,
     required this.startsAt,
+    this.id,
+    this.venueName,
   });
+
+  /// The backend's id; null for sample data.
+  final int? id;
+
+  /// The venue the backend has, if any. Otherwise it is worked out from the home school.
+  final String? venueName;
 
   final Sport sport;
   final String ageGroup;
@@ -78,7 +96,7 @@ class Fixture {
   final School away;
   final DateTime startsAt;
 
-  String get venue => '${home.name} Sports Ground';
+  String get venue => (venueName != null && venueName!.trim().isNotEmpty) ? venueName! : '${home.name} Sports Ground';
 
   /// e.g. FOOTBALL U/19
   String get competition => '${sport.label} $ageGroup'.toUpperCase();

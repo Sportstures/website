@@ -7,6 +7,7 @@ import '../../utils/formatters.dart';
 import '../../widgets/site/ai_analysis_view.dart';
 import '../../widgets/site/ai_picks_card.dart';
 import '../../widgets/site/filter_bar.dart';
+import '../../widgets/site/match_data_builder.dart';
 import '../../widgets/site/match_rows.dart';
 import '../../widgets/site/page_hero.dart';
 import '../../widgets/site/promo_card.dart';
@@ -18,14 +19,30 @@ import 'widgets/date_strip.dart';
 import 'widgets/month_calendar_card.dart';
 import 'widgets/quick_filters_card.dart';
 
-class FixturesPage extends StatefulWidget {
+class FixturesPage extends StatelessWidget {
   const FixturesPage({super.key});
 
   @override
-  State<FixturesPage> createState() => _FixturesPageState();
+  Widget build(BuildContext context) {
+    return MatchDataBuilder(
+      currentRoute: SiteRoutes.fixtures,
+      title: 'Fixtures',
+      subtitle: 'Find upcoming school fixtures across South Africa.',
+      builder: (context, data) => _FixturesView(data: data),
+    );
+  }
 }
 
-class _FixturesPageState extends State<FixturesPage> {
+class _FixturesView extends StatefulWidget {
+  const _FixturesView({required this.data});
+
+  final SportsData data;
+
+  @override
+  State<_FixturesView> createState() => _FixturesViewState();
+}
+
+class _FixturesViewState extends State<_FixturesView> {
   static const _pageSize = 8;
   static const _stripLength = 7;
 
@@ -34,9 +51,9 @@ class _FixturesPageState extends State<FixturesPage> {
 
   /// Starts on the first day that still has fixtures, so the list isn't empty
   /// when today's matches are already over.
-  late DateTime _selectedDay = SportsData.instance.fixtures.isEmpty
+  late DateTime _selectedDay = widget.data.fixtures.isEmpty
       ? _stripStart
-      : DateUtils.dateOnly(SportsData.instance.fixtures.first.startsAt);
+      : DateUtils.dateOnly(widget.data.fixtures.first.startsAt);
 
   /// Calendar view lists the whole week in the strip instead of one day.
   var _calendarView = false;
@@ -84,7 +101,7 @@ class _FixturesPageState extends State<FixturesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final matching = SportsData.instance.fixtures.where(_filters.matches).toList();
+    final matching = widget.data.fixtures.where(_filters.matches).toList();
     final stripDays = [for (var i = 0; i < _stripLength; i++) _addDays(_stripStart, i)];
     final shown = matching.where((fixture) {
       final day = DateUtils.dateOnly(fixture.startsAt);
@@ -110,6 +127,7 @@ class _FixturesPageState extends State<FixturesPage> {
                 FilterBar(
                   searchLabel: 'Search fixtures',
                   filters: _filters,
+                  regions: widget.data.regionOptions,
                   onApply: _applyFilters,
                 ),
                 const SizedBox(height: 20),
@@ -156,6 +174,14 @@ class _FixturesPageState extends State<FixturesPage> {
   }
 
   Widget _buildFixtureList(List<Fixture> shown) {
+    if (widget.data.fixtures.isEmpty) {
+      return const SectionCard(
+        title: 'Fixtures',
+        trailing: CountLabel(count: 0, noun: 'fixture'),
+        child: EmptyState('No fixtures have been scheduled yet. Check back soon.'),
+      );
+    }
+
     if (shown.isEmpty) {
       return SectionCard(
         title: _calendarView ? 'This week' : formatLongDate(_selectedDay),

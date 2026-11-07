@@ -6,7 +6,35 @@ import 'models.dart';
 
 // TODO: replace this generated sample data with calls to the Node/JS backend
 class SportsData {
-  SportsData._(this.fixtures, this.results);
+  SportsData._(
+    this.fixtures,
+    this.results, {
+    List<String>? regions,
+    List<String>? ageGroups,
+    List<String>? leagues,
+  })  : regionOptions = regions ?? _distinctSorted(_schoolsOf(fixtures, results).map((s) => s.region)),
+        ageGroupOptions = ageGroups ?? _distinctSorted([...fixtures.map((f) => f.ageGroup), ...results.map((r) => r.fixture.ageGroup)]),
+        leagueOptions = leagues ?? _distinctSorted([...fixtures.map((f) => f.league), ...results.map((r) => r.fixture.league)]);
+
+  /// Match data that came from somewhere else (the backend). Both lists are newest/soonest first as in the sample.
+  factory SportsData.fromMatches(List<Fixture> fixtures, List<MatchResult> results) =>
+      SportsData._(fixtures, results);
+
+  static Iterable<School> _schoolsOf(List<Fixture> fixtures, List<MatchResult> results) => [
+        for (final f in fixtures) ...[f.home, f.away],
+        for (final r in results) ...[r.fixture.home, r.fixture.away],
+      ];
+
+  static List<String> _distinctSorted(Iterable<String> values) =>
+      {for (final v in values) if (v.trim().isNotEmpty) v}.toList()..sort();
+
+  /// What the Region, Age Group and Competition filters offer for THIS data.
+  final List<String> regionOptions;
+  final List<String> ageGroupOptions;
+  final List<String> leagueOptions;
+
+  /// True for the made-up data that ships with the app.
+  bool get isSample => identical(this, instance);
 
   static final instance = SportsData._generate(DateTime.now());
 
@@ -22,6 +50,9 @@ class SportsData {
     for (final result in results) result.fixture.startsAt.year,
   }.toList()
     ..sort((a, b) => b.compareTo(a));
+
+  /// [seasons], or this year when there are no matches at all (so a season picker never has nothing to pick).
+  late final List<int> seasonOptions = seasons.isEmpty ? [DateTime.now().year] : seasons;
 
   static const schools = [
     School(
@@ -213,7 +244,7 @@ class SportsData {
 
     fixtures.sort((a, b) => a.startsAt.compareTo(b.startsAt));
     results.sort((a, b) => b.fixture.startsAt.compareTo(a.fixture.startsAt));
-    return SportsData._(fixtures, results);
+    return SportsData._(fixtures, results, regions: regions, ageGroups: ageGroups, leagues: leagues);
   }
 
   static (int, int) _scoreRange(Sport sport) => switch (sport) {
