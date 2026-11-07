@@ -87,6 +87,14 @@ class Session extends ChangeNotifier {
     return _accept(data);
   }
 
+  /// Creates an unverified learner and emails them a code. Throws [ApiException].
+  Future<void> registerLearner(Map<String, Object?> body) =>
+      api.post('/api/auth/register', body: body, auth: false);
+
+  /// Creates a coach and their team, and emails a code. Throws [ApiException].
+  Future<void> registerCoach(Map<String, Object?> body) =>
+      api.post('/api/auth/register/coach', body: body, auth: false);
+
   /// Confirms the emailed code. Coaches are signed in by this call and the user is returned.
   /// Learners must log in afterwards, so this returns null for them.
   Future<AppUser?> verifyOtp(String email, String code) async {
@@ -142,6 +150,10 @@ class SessionScope extends InheritedNotifier<Session> {
     assert(scope != null, 'No SessionScope above this widget');
     return scope!.notifier!;
   }
+
+  /// The session, or null when there is no [SessionScope] above (some tests build pages alone).
+  static Session? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<SessionScope>()?.notifier;
 
   /// Like [of] but does not rebuild when the session changes.
   static Session read(BuildContext context) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../api/session.dart';
 import '../../theme/app_colors.dart';
 import 'photo_background.dart';
 import 'site_routes.dart';
@@ -189,6 +190,38 @@ class _AuthButtons extends StatelessWidget {
     const padding = EdgeInsets.symmetric(horizontal: 18);
     const textStyle = TextStyle(fontSize: 12, fontWeight: FontWeight.w700);
 
+    // Signed in: show who, with a way out.
+    final session = SessionScope.maybeOf(context);
+    final user = session?.user;
+    if (session != null && user != null) {
+      final name = user.displayName.isEmpty ? 'My account' : user.displayName;
+      return Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
+          OutlinedButton(
+            onPressed: () async {
+              await session.logout();
+              if (context.mounted) {
+                Navigator.of(context).pushNamedAndRemoveUntil(SiteRoutes.home, (route) => false);
+              }
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.ink,
+              side: const BorderSide(color: AppColors.ink),
+              shape: shape,
+              padding: padding,
+              minimumSize: const Size(0, 36),
+              textStyle: textStyle,
+            ),
+            child: const Text('LOG OUT'),
+          ),
+        ],
+      );
+    }
+
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -205,7 +238,7 @@ class _AuthButtons extends StatelessWidget {
           child: const Text('LOGIN'),
         ),
         OutlinedButton(
-          onPressed: () => openSiteRoute(context, SiteRoutes.signup),
+          onPressed: () => openSiteRoute(context, SiteRoutes.forSchools),
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.ink,
             side: const BorderSide(color: AppColors.ink),

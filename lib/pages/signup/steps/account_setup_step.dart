@@ -8,6 +8,16 @@ class AccountSetupStep extends StatelessWidget {
 
   final SignupFormData data;
 
+  /// Mirrors the backend: 8 to 72 characters with at least one letter and one number.
+  static String? passwordProblem(String v) {
+    if (v.length < 8) return 'Password must be at least 8 characters';
+    if (v.length > 72) return 'Password must be 72 characters or fewer';
+    if (!RegExp(r'[A-Za-z]').hasMatch(v) || !RegExp(r'd').hasMatch(v)) {
+      return 'Use at least one letter and one number';
+    }
+    return null;
+  }
+
   static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
   @override
@@ -34,24 +44,13 @@ class AccountSetupStep extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           SignupTextField(
-            label: 'Username',
-            hint: 'e.g. coach_jim',
-            controller: data.username,
-            autofillHints: const [AutofillHints.newUsername],
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Required';
-              return v.contains(' ') ? 'Username cannot contain spaces' : null;
-            },
-          ),
-          const SizedBox(height: 18),
-          SignupTextField(
             label: 'Password',
             controller: data.password,
             isPassword: true,
             autofillHints: const [AutofillHints.newPassword],
             validator: (v) {
               if (v == null || v.isEmpty) return 'Required';
-              return v.length < 8 ? 'Password must be at least 8 characters' : null;
+              return passwordProblem(v);
             },
           ),
           const SizedBox(height: 18),

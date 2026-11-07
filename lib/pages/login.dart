@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../api/api_exception.dart';
+import '../api/session.dart';
 import '../theme/app_colors.dart';
 import '../widgets/site/site_routes.dart';
 import 'auth/auth_layout.dart';
@@ -16,6 +18,9 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _busy = false;
+  String? _error;
+  bool _needsVerification = false;
 
   @override
   void dispose() {
@@ -24,10 +29,36 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _handleSignIn() {
-    if (_formKey.currentState?.validate() ?? false) {
-      // TODO: wire up to Node/JS backend auth endpoint
+  Future<void> _handleSignIn() async {
+    if (_busy || !(_formKey.currentState?.validate() ?? false)) return;
+    final session = SessionScope.read(context);
+    setState(() {
+      _busy = true;
+      _error = null;
+      _needsVerification = false;
+    });
+    try {
+      await session.login(_emailController.text, _passwordController.text);
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil(SiteRoutes.home, (route) => false);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _needsVerification = e.code == 'EMAIL_NOT_VERIFIED';
+        _error = switch (e.code) {
+          'INVALID_CREDENTIALS' => 'Wrong email or password.',
+          'EMAIL_NOT_VERIFIED' => 'Please verify your email before logging in.',
+          'TOO_MANY_REQUESTS' => 'Too many attempts. Please wait a few minutes and try again.',
+          _ => e.message,
+        };
+      });
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
+  }
+
+  void _openVerification() {
+    Navigator.of(context).pushNamed(SiteRoutes.signup, arguments: {'verifyEmail': _emailController.text.trim()});
   }
 
   @override
@@ -104,19 +135,45 @@ class _LoginPageState extends State<LoginPage> {
               ),
               validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
             ),
+            if (_error != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  border: Border.all(color: Colors.red.shade200),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_error!, style: TextStyle(color: Colors.red.shade800, fontSize: 12)),
+                    if (_needsVerification)
+                      TextButton(
+                        onPressed: _openVerification,
+                        style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 28)),
+                        child: const Text('Enter your verification code'),
+                      ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 28),
             SizedBox(
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
-                onPressed: _handleSignIn,
+                onPressed: _busy ? null : _handleSignIn,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.green,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                child: const Text('Sign In', style: TextStyle(fontWeight: FontWeight.w700)),
+                child: _busy
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Sign In', style: TextStyle(fontWeight: FontWeight.w700)),
               ),
             ),
             const SizedBox(height: 20),

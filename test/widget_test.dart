@@ -11,8 +11,10 @@ Future<void> _pick(WidgetTester tester, String hint, String option) async {
 }
 
 Future<void> _tapNext(WidgetTester tester) async {
-  await tester.ensureVisible(find.text('Next Step'));
-  await tester.tap(find.text('Next Step'));
+  // The last form step's button says 'Create account' instead of 'Next Step'.
+  final next = find.text('Next Step').evaluate().isNotEmpty ? find.text('Next Step') : find.text('Create account');
+  await tester.ensureVisible(next);
+  await tester.tap(next);
   await tester.pumpAndSettle();
 }
 
@@ -82,20 +84,18 @@ void main() {
     await _tapNext(tester);
     expect(find.text('School details'), findsOneWidget);
 
-    // Step 2: school details
-    await _pick(tester, 'Select your school', 'Greenwood Academy');
-    await _pick(tester, 'Select your province', 'Gauteng');
-    await tester.enterText(find.widgetWithText(TextFormField, 'e.g. GRW-2024'), 'GRW-2024');
-    await _pick(tester, 'Select your role', 'Coach');
+    // Step 2: school details (learner by default)
+    await tester.enterText(find.widgetWithText(TextFormField, 'e.g. Greenwood High'), 'Greenwood High');
+    await _pick(tester, 'Select grade', 'Grade 2');
+    await tester.enterText(find.widgetWithText(TextFormField, 'e.g. 10A'), '10A');
     await _tapNext(tester);
     expect(find.text('Account setup'), findsOneWidget);
 
     // Step 3: mismatched passwords are rejected.
-    final passwordFields = find.byType(TextFormField);
-    await tester.enterText(passwordFields.at(0), 'coach.jim@greenwood.com');
-    await tester.enterText(passwordFields.at(1), 'coach_jim');
-    await tester.enterText(passwordFields.at(2), 'password123');
-    await tester.enterText(passwordFields.at(3), 'password124');
+    final accountFields = find.byType(TextFormField);
+    await tester.enterText(accountFields.at(0), 'jim@greenwood.com');
+    await tester.enterText(accountFields.at(1), 'password123');
+    await tester.enterText(accountFields.at(2), 'password124');
     await _tapNext(tester);
     expect(find.text('Passwords do not match'), findsOneWidget);
 
@@ -103,8 +103,8 @@ void main() {
     await tester.tap(find.text('Back'));
     await tester.pumpAndSettle();
     expect(find.text('School details'), findsOneWidget);
-    expect(find.text('GRW-2024'), findsOneWidget);
-    expect(find.text('Greenwood Academy'), findsOneWidget);
+    expect(find.text('Greenwood High'), findsOneWidget);
+    expect(find.text('10A'), findsOneWidget);
 
     // Login link returns to the login page.
     await tester.ensureVisible(find.text('Login'));
