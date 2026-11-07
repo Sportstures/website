@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../../api/api_exception.dart';
+import '../../api/session.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/site/site_routes.dart';
 import '../auth/auth_layout.dart';
 import 'signup_form_data.dart';
 import 'steps/account_setup_step.dart';
+import 'steps/complete_step.dart';
 import 'steps/personal_info_step.dart';
 import 'steps/school_details_step.dart';
+import 'steps/verify_step.dart';
 import 'widgets/signup_stepper.dart';
 
 class SignupPage extends StatefulWidget {
@@ -21,9 +25,30 @@ class _SignupPageState extends State<SignupPage> {
   final _data = SignupFormData();
   int _step = 0;
 
-  /// Index of the last step with a screen. Verify and Complete are shown in
-  /// the stepper but have not been designed yet.
-  static const _lastBuiltStep = 2;
+  static const _accountStep = 2;
+  static const _verifyStep = 3;
+  static const _completeStep = 4;
+
+  bool _submitting = false;
+  bool _signedInByVerify = false;
+  bool _startedWithoutCode = false;
+  bool _argsRead = false;
+  String? _error;
+  String _verifyEmail = '';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_argsRead) return;
+    _argsRead = true;
+    // Login sends people with an unverified email straight to the code step.
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map && args['verifyEmail'] is String) {
+      _verifyEmail = args['verifyEmail'] as String;
+      _step = _verifyStep;
+      _startedWithoutCode = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -31,16 +56,82 @@ class _SignupPageState extends State<SignupPage> {
     super.dispose();
   }
 
-  void _handleNext() {
+  Future<void> _handleNext() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    if (_step < _lastBuiltStep) {
-      setState(() => _step++);
+    if (_step < _accountStep) {
+      setState(() {
+        _step++;
+        _error = null;
+      });
       return;
     }
-    // TODO: submit _data to the Node/JS backend, then continue to the Verify step
+    await _submit();
   }
 
-  void _handleBack() => setState(() => _step--);
+  Future<void> _submit() async {
+    final session = SessionScope.read(context);
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      if (_data.isCoach) {
+        await session.registerCoach(_data.coachPayload());
+      } else {
+        await session.registerLearner(_data.learnerPayload());
+      }
+      if (!mounted) return;
+      setState(() {
+        _verifyEmail = _data.email.text.trim();
+        _step = _verifyStep;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _error = _describe(e));
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  /// The backend can reject fields from earlier steps, so name them all.
+  String _describe(ApiException e) {
+    if (e.code == 'EMAIL_TAKEN') return 'An account with this email already exists. Try logging in instead.';
+    if (e.fieldErrors.isEmpty) return e.message;
+    return e.fieldErrors.entries.map((f) => '${_fieldName(f.key)}: ${f.value}').join('\n');
+  }
+
+  static String _fieldName(String key) => switch (key) {
+        'dateOfBirth' => 'Date of birth',
+        'school' || 'school.name' => 'School',
+        'school.grade' => 'Grade',
+        'school.className' => 'Class',
+        'sport' || 'sport.name' || 'team.sport' => 'Sport',
+        'team.name' => 'Team name',
+        'team.level' => 'Team level',
+        'coachingRole' => 'Coaching role',
+        'experience' => 'Experience',
+        'firstName' => 'First name',
+        'lastName' => 'Last name',
+        _ => key[0].toUpperCase() + key.substring(1),
+      };
+
+  void _handleBack() => setState(() {
+        _step--;
+        _error = null;
+      });
+
+  void _handleVerified(AppUser? user) => setState(() {
+        _signedInByVerify = user != null;
+        _step = _completeStep;
+      });
+
+  void _handleContinue() {
+    if (_signedInByVerify) {
+      Navigator.of(context).pushNamedAndRemoveUntil(SiteRoutes.home, (route) => false);
+    } else {
+      _goToLogin();
+    }
+  }
 
   /// Sign-up can be reached from the landing page or from login, so rebuild
   /// the stack as home → login rather than just popping.
@@ -62,8 +153,11 @@ class _SignupPageState extends State<SignupPage> {
             SignupStepper(currentStep: _step),
             const SizedBox(height: 32),
             _buildStepContent(),
-            const SizedBox(height: 28),
-            _buildActions(),
+            if (_step <= _accountStep) ...[
+              if (_error != null) _ErrorBanner(_error!),
+              const SizedBox(height: 28),
+              _buildActions(),
+            ],
             const SizedBox(height: 16),
             _buildLoginLink(),
             const SizedBox(height: 24),
@@ -78,7 +172,14 @@ class _SignupPageState extends State<SignupPage> {
     return switch (_step) {
       0 => PersonalInfoStep(data: _data),
       1 => SchoolDetailsStep(data: _data),
-      _ => AccountSetupStep(data: _data),
+      2 => AccountSetupStep(data: _data),
+      _verifyStep => VerifyStep(
+          session: SessionScope.read(context),
+          email: _verifyEmail,
+          onVerified: _handleVerified,
+          initialCooldown: _startedWithoutCode ? 0 : 60,
+        ),
+      _ => CompleteStep(signedIn: _signedInByVerify, onContinue: _handleContinue),
     };
   }
 
@@ -100,21 +201,23 @@ class _SignupPageState extends State<SignupPage> {
           child: SizedBox(
             height: 46,
             child: ElevatedButton(
-              onPressed: _handleNext,
+              onPressed: _submitting ? null : _handleNext,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.orange,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: const StadiumBorder(),
               ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Next Step', style: TextStyle(fontWeight: FontWeight.w600)),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 16),
-                ],
-              ),
+              child: _submitting
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(_step == _accountStep ? 'Create account' : 'Next Step', style: const TextStyle(fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward, size: 16),
+                      ],
+                    ),
             ),
           ),
         ),
@@ -147,6 +250,27 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner(this.message);
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        border: Border.all(color: Colors.red.shade200),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(message, style: TextStyle(color: Colors.red.shade800, fontSize: 12, height: 1.4)),
     );
   }
 }

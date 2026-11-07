@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../widgets/site/site_routes.dart';
 import '../signup_form_data.dart';
 import '../../../theme/app_colors.dart';
 import '../widgets/form_fields.dart';
@@ -113,8 +114,21 @@ class PersonalInfoStep extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 18),
+              const FieldLabel('I am signing up as'),
+              RadioGroup<AccountType>(
+                groupValue: data.accountType,
+                onChanged: (t) => data.update(() => data.accountType = t!),
+                child: Row(
+                  children: [
+                    _typeOption(AccountType.learner, 'Learner'),
+                    const SizedBox(width: 24),
+                    _typeOption(AccountType.coach, 'Coach'),
+                  ],
+                ),
+              ),
               const SizedBox(height: 14),
-              _registerAsSchoolOption(),
+              _schoolLink(context),
             ],
           ),
         ),
@@ -140,29 +154,39 @@ class PersonalInfoStep extends StatelessWidget {
     );
   }
 
-  Widget _registerAsSchoolOption() {
-    void toggle() => data.update(() => data.registerAsSchool = !data.registerAsSchool);
+  Widget _typeOption(AccountType type, String label) {
+    return GestureDetector(
+      onTap: () => data.update(() => data.accountType = type),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Radio<AccountType>(
+            value: type,
+            activeColor: AppColors.orange,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+          ),
+          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.ink)),
+        ],
+      ),
+    );
+  }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+  /// Registering a whole school is a different flow from creating a personal account.
+  Widget _schoolLink(BuildContext context) {
+    return Wrap(
       children: [
-        Checkbox(
-          value: data.registerAsSchool,
-          onChanged: (_) => toggle(),
-          activeColor: AppColors.orange,
-          shape: const CircleBorder(),
-          side: const BorderSide(color: AppColors.border, width: 1.5),
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          visualDensity: VisualDensity.compact,
+        const Text(
+          'Registering a whole school? ',
+          style: TextStyle(fontSize: 12, color: AppColors.muted),
         ),
-        GestureDetector(
-          onTap: toggle,
-          child: const Text(
-            'Register as a school',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.ink,
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () => openSiteRoute(context, SiteRoutes.forSchools),
+            child: const Text(
+              'See how it works',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.orange),
             ),
           ),
         ),

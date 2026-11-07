@@ -52,7 +52,7 @@ class SiteFooter extends StatelessWidget {
     'For Schools': SiteRoutes.schools,
     'About': SiteRoutes.about,
     'More Sports': SiteRoutes.sports,
-    'Register Your School': SiteRoutes.signup,
+    'Register Your School': SiteRoutes.forSchools,
     // The five management links are parts of one set of tools rather than five
     // destinations, so they share a page.
     'Manage Teams': SiteRoutes.forSchools,
