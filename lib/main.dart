@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'api/api_client.dart';
+import 'api/session.dart';
+import 'api/token_store.dart';
 import 'pages/about/about_page.dart';
 import 'pages/auth/forgot_password_page.dart';
 import 'pages/contact/contact_page.dart';
@@ -23,11 +26,35 @@ void main() {
   runApp(const TobunApp());
 }
 
-class TobunApp extends StatelessWidget {
-  const TobunApp({super.key});
+class TobunApp extends StatefulWidget {
+  /// Pass a [session] to run against a different backend or token store (tests do).
+  const TobunApp({super.key, this.session});
+
+  final Session? session;
+
+  @override
+  State<TobunApp> createState() => _TobunAppState();
+}
+
+class _TobunAppState extends State<TobunApp> {
+  late final Session _session =
+      widget.session ?? Session(ApiClient(tokenStore: PrefsTokenStore()));
+
+  @override
+  void initState() {
+    super.initState();
+    _session.restore();
+  }
 
   @override
   Widget build(BuildContext context) {
+    return SessionScope(
+      session: _session,
+      child: _buildApp(),
+    );
+  }
+
+  Widget _buildApp() {
     return MaterialApp(
       title: 'Tobun Sports Portal',
       debugShowCheckedModeBanner: false,
