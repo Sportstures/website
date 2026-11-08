@@ -36,6 +36,15 @@ demo league: in `Sportstures-backend` run `npm run seed:demo`.
 A school's region on these pages is its **province** (the backend has no finer region). Matches in a sport the
 site has no page for are left out. Data is cached for two minutes.
 
+## Coach area
+
+Signed-in coaches get a **MY TEAM** button in the header and land on `/coach` after logging in:
+
+- `/coach`: dashboard (squad size, season record, win rate, next match, recent results, action items).
+- `/coach/team`: squad (approve or decline join requests, edit jersey numbers and positions, remove players, add learners from the school).
+
+Both need a coach login; visitors and learners see a short explanation instead. Needs the backend `GET /api/coach/dashboard`. With the demo data, log in as `coach1@demo.sportstures.test` (password `DemoPass1`).
+
 ## Tests
 
 `flutter test`. The API tests use a fake server, so they need no backend running.

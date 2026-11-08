@@ -24,6 +24,10 @@ abstract final class SiteRoutes {
   /// What a registered school gets: the management tools.
   static const forSchools = '/for-schools';
 
+  /// The signed-in coach's area.
+  static const coach = '/coach';
+  static const coachTeam = '/coach/team';
+
   static const help = '/help';
   static const terms = '/terms';
   static const privacy = '/privacy';
