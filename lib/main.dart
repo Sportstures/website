@@ -7,6 +7,7 @@ import 'data/match_store.dart';
 import 'pages/about/about_page.dart';
 import 'pages/auth/forgot_password_page.dart';
 import 'pages/coach/coach_home_page.dart';
+import 'pages/coach/coach_invite_page.dart';
 import 'pages/coach/coach_team_page.dart';
 import 'pages/contact/contact_page.dart';
 import 'pages/for_schools/for_schools_page.dart';
@@ -74,7 +75,19 @@ class _TobunAppState extends State<TobunApp> {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E4A3D)),
       ),
       initialRoute: SiteRoutes.home,
-      routes: {
+      routes: _routes,
+      // An invitation link arrives as /signup?invite=<code>. Open the page and keep the whole name,
+      // so the sign-up page can read the code.
+      onGenerateRoute: (settings) {
+        final name = settings.name ?? '';
+        final query = name.indexOf('?');
+        final builder = query < 0 ? null : _routes[name.substring(0, query)];
+        return builder == null ? null : MaterialPageRoute<void>(settings: settings, builder: builder);
+      },
+    );
+  }
+
+  static final Map<String, WidgetBuilder> _routes = {
         SiteRoutes.home: (_) => const LandingPage(),
         SiteRoutes.fixtures: (_) => const FixturesPage(),
         SiteRoutes.results: (_) => const ResultsPage(),
@@ -91,12 +104,11 @@ class _TobunAppState extends State<TobunApp> {
         SiteRoutes.forSchools: (_) => const ForSchoolsPage(),
         SiteRoutes.coach: (_) => const CoachHomePage(),
         SiteRoutes.coachTeam: (_) => const CoachTeamPage(),
+        SiteRoutes.coachInvite: (_) => const CoachInvitePage(),
         SiteRoutes.help: (_) => const HelpPage(),
         SiteRoutes.terms: (_) => const PolicyPage(policy: Policy.terms),
         SiteRoutes.privacy: (_) => const PolicyPage(policy: Policy.privacy),
         SiteRoutes.safety: (_) => const PolicyPage(policy: Policy.safety),
         SiteRoutes.forgotPassword: (_) => const ForgotPasswordPage(),
-      },
-    );
-  }
+      };
 }
