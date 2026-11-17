@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../api/api_exception.dart';
+import '../../api/invitations_api.dart';
 import '../../api/session.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/site/site_routes.dart';
@@ -36,6 +37,8 @@ class _SignupPageState extends State<SignupPage> {
   bool _argsRead = false;
   String? _error;
   String _verifyEmail = '';
+  InvitationInfo? _invite;
+  bool _inviteInvalid = false;
 
   @override
   void didChangeDependencies() {
@@ -48,6 +51,36 @@ class _SignupPageState extends State<SignupPage> {
       _verifyEmail = args['verifyEmail'] as String;
       _step = _verifyStep;
       _startedWithoutCode = true;
+    }
+    final code = _inviteCodeFrom(args);
+    if (code != null) _openInvitation(code);
+  }
+
+  /// A link like `/signup?invite=<code>`, or the code passed as an argument.
+  String? _inviteCodeFrom(Object? args) {
+    if (args is Map && args['invite'] is String) return args['invite'] as String;
+    final name = ModalRoute.of(context)?.settings.name;
+    final code = name == null ? null : Uri.tryParse(name)?.queryParameters['invite'];
+    return code == null || code.isEmpty ? null : code;
+  }
+
+  /// Checks the code and, if it is good, starts the form as a coach with the invited email filled in.
+  Future<void> _openInvitation(String code) async {
+    final api = SessionScope.read(context).api;
+    try {
+      final info = await InvitationsApi(api).lookup(code);
+      if (!mounted) return;
+      setState(() {
+        _invite = info;
+        _data.inviteCode = code;
+        _data.update(() {
+          _data.accountType = AccountType.coach;
+          if (info.email != null && _data.email.text.isEmpty) _data.email.text = info.email!;
+        });
+      });
+    } on ApiException {
+      // A dead link must not stop anyone registering.
+      if (mounted) setState(() => _inviteInvalid = true);
     }
   }
 
@@ -154,6 +187,8 @@ class _SignupPageState extends State<SignupPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (_invite != null) _InviteBanner("${_invite!.from} invited you to join Sportstures. Register as a coach to get started."),
+            if (_inviteInvalid) const _InviteBanner('This invitation link is not valid any more, but you can still register below.', muted: true),
             SignupStepper(currentStep: _step),
             const SizedBox(height: 32),
             _buildStepContent(),
@@ -252,6 +287,35 @@ class _SignupPageState extends State<SignupPage> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InviteBanner extends StatelessWidget {
+  const _InviteBanner(this.message, {this.muted = false});
+
+  final String message;
+  final bool muted;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = muted ? AppColors.muted : AppColors.green;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(muted ? Icons.info_outline : Icons.mark_email_read_outlined, size: 18, color: color),
+          const SizedBox(width: 10),
+          Expanded(child: Text(message, style: TextStyle(color: AppColors.ink, fontSize: 13, height: 1.4, fontWeight: muted ? FontWeight.w400 : FontWeight.w600))),
         ],
       ),
     );

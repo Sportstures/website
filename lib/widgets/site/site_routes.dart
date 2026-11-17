@@ -28,6 +28,9 @@ abstract final class SiteRoutes {
   static const coach = '/coach';
   static const coachTeam = '/coach/team';
 
+  /// Invite a coach from another school (by email or a shareable link).
+  static const coachInvite = '/coach/invite';
+
   static const help = '/help';
   static const terms = '/terms';
   static const privacy = '/privacy';

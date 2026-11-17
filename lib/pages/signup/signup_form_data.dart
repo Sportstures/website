@@ -61,6 +61,9 @@ class SignupFormData extends ChangeNotifier {
   String? experience; // coaches: a code from [coachExperience]
   String? teamLevel; // coaches: a code from [teamLevels]
 
+  /// Set when the person opened an invitation link. Sent with the coach sign-up.
+  String? inviteCode;
+
   // Step 3: account setup
   final email = TextEditingController();
   final password = TextEditingController();
@@ -124,6 +127,7 @@ class SignupFormData extends ChangeNotifier {
         },
         'email': email.text.trim(),
         'password': password.text,
+        if (inviteCode != null) 'inviteCode': inviteCode,
       };
 
   @override

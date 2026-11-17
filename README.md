@@ -42,6 +42,9 @@ Signed-in coaches get a **MY TEAM** button in the header and land on `/coach` af
 
 - `/coach`: dashboard (squad size, season record, win rate, next match, recent results, action items).
 - `/coach/team`: squad (approve or decline join requests, edit jersey numbers and positions, remove players, add learners from the school).
+- `/coach/invite`: invite a coach from another school, either by **email** (the system sends an official invitation) or by copying a **share link** for WhatsApp or social media. Shows what was sent and how many coaches joined. Needs the backend `/api/invitations` (migration 012) and `WEBSITE_URL` set on the server.
+
+An invitation link opens `/signup?invite=<code>`: the page says who invited the person, starts them on the coach sign-up with the invited email filled in, and sends the code with the registration. A dead link never blocks signing up.
 
 Both need a coach login; visitors and learners see a short explanation instead. Needs the backend `GET /api/coach/dashboard`. With the demo data, log in as `coach1@demo.sportstures.test` (password `DemoPass1`).
 

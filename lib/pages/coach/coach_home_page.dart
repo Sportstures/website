@@ -150,6 +150,24 @@ class _Dashboard extends StatelessWidget {
               _RecentResults(fixtures: data.recentResults, teamId: team.id, form: record.form),
               const SizedBox(height: 16),
               SectionCard(
+                title: 'Grow the league',
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Invite a coach from another school, so you can play each other on Sportstures.',
+                        style: TextStyle(fontSize: 13, color: AppColors.muted, height: 1.5),
+                      ),
+                      const SizedBox(height: 12),
+                      SiteButton(label: 'INVITE ANOTHER SCHOOL', small: true, onPressed: () => openSiteRoute(context, SiteRoutes.coachInvite)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SectionCard(
                 title: 'Your squad',
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),
