@@ -71,8 +71,9 @@ class _HelpPageState extends State<HelpPage> {
       [
         (
           'How are standings worked out?',
-          'Three points for a win, one for a draw. Ties are split on score difference, then on '
-              'points scored, then alphabetically.',
+          'Three points for a win, one for a draw. Schools level on points are split on score '
+              'difference, then on points scored, then on their results against each other '
+              '(head-to-head), then alphabetically.',
         ),
         (
           'Why is our table different from the rankings?',

@@ -258,7 +258,9 @@ class SportsData {
       };
 
   /// Log table built from [results] (newest first): 3 points for a win, 1 for
-  /// a draw. Pass [side] to count only home or only away matches.
+  /// a draw. Schools level on points are split on score difference, then points
+  /// scored, then head-to-head (a mini table of the matches between the tied
+  /// schools), then alphabetically. Pass [side] to count only home or only away matches.
   static List<SchoolStanding> standingsFor(Iterable<MatchResult> results, {TeamSide? side}) {
     final table = <School, SchoolStanding>{};
     SchoolStanding entry(School school) => table.putIfAbsent(school, () => SchoolStanding(school));
@@ -272,17 +274,62 @@ class SportsData {
       }
     }
 
-    return table.values.toList()
+    int level(SchoolStanding a, SchoolStanding b) {
+      for (final comparison in [
+        b.points.compareTo(a.points),
+        b.scoreDifference.compareTo(a.scoreDifference),
+        b.scored.compareTo(a.scored),
+      ]) {
+        if (comparison != 0) return comparison;
+      }
+      return 0;
+    }
+
+    final sorted = table.values.toList()
       ..sort((a, b) {
-        for (final comparison in [
-          b.points.compareTo(a.points),
-          b.scoreDifference.compareTo(a.scoreDifference),
-          b.scored.compareTo(a.scored),
-        ]) {
-          if (comparison != 0) return comparison;
-        }
-        return a.school.name.compareTo(b.school.name);
+        final byRecord = level(a, b);
+        return byRecord != 0 ? byRecord : a.school.name.compareTo(b.school.name);
       });
+
+    // Schools still level are separated by their matches against each other.
+    final ordered = <SchoolStanding>[];
+    var start = 0;
+    while (start < sorted.length) {
+      var end = start + 1;
+      while (end < sorted.length && level(sorted[start], sorted[end]) == 0) {
+        end++;
+      }
+      final run = sorted.sublist(start, end);
+      ordered.addAll(run.length > 1 ? _byHeadToHead(run, results, side) : run);
+      start = end;
+    }
+    return ordered;
+  }
+
+  /// Orders [tied] schools by a mini table of only the matches between them. Schools still level keep
+  /// their alphabetical order.
+  static List<SchoolStanding> _byHeadToHead(List<SchoolStanding> tied, Iterable<MatchResult> results, TeamSide? side) {
+    final schools = {for (final s in tied) s.school};
+    final mini = {for (final s in tied) s.school: SchoolStanding(s.school)};
+    for (final result in results) {
+      if (!schools.contains(result.fixture.home) || !schools.contains(result.fixture.away)) continue;
+      if (side != TeamSide.away) mini[result.fixture.home]!.record(result.homeScore, result.awayScore);
+      if (side != TeamSide.home) mini[result.fixture.away]!.record(result.awayScore, result.homeScore);
+    }
+    final ordered = [...tied];
+    ordered.sort((a, b) {
+      final x = mini[a.school]!;
+      final y = mini[b.school]!;
+      for (final comparison in [
+        y.points.compareTo(x.points),
+        y.scoreDifference.compareTo(x.scoreDifference),
+        y.scored.compareTo(x.scored),
+      ]) {
+        if (comparison != 0) return comparison;
+      }
+      return a.school.name.compareTo(b.school.name);
+    });
+    return ordered;
   }
 
   // TODO: the backend's ranking formula should follow the weights shown in the

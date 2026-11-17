@@ -85,6 +85,13 @@ class LeagueTable extends StatelessWidget {
               ],
           ],
         ),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(14, 12, 14, 0),
+          child: Text(
+            'Level on points? Score difference decides, then points scored, then the result between the two schools.',
+            style: TextStyle(fontSize: 11, color: AppColors.muted, height: 1.4),
+          ),
+        ),
         if (zonesShown)
           const Padding(
             padding: EdgeInsets.all(14),
