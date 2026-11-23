@@ -46,6 +46,29 @@ class ApiClient {
 
   Future<dynamic> delete(String path) => _send('DELETE', path);
 
+  /// Uploads one image as multipart/form-data (field "photo") with PUT, like the profile photo and team logo.
+  Future<dynamic> putPhoto(String path, List<int> bytes, {String filename = 'photo'}) async {
+    Future<http.Response> once() async {
+      final request = http.MultipartRequest('PUT', _uri(path, null));
+      request.headers['Accept'] = 'application/json';
+      final saved = await tokens.read();
+      if (saved != null) request.headers['Authorization'] = 'Bearer ${saved.accessToken}';
+      request.files.add(http.MultipartFile.fromBytes('photo', bytes, filename: filename));
+      try {
+        final streamed = await _http.send(request).timeout(const Duration(seconds: 60));
+        return await http.Response.fromStream(streamed);
+      } catch (_) {
+        throw ApiException.network();
+      }
+    }
+
+    var response = await once();
+    if (response.statusCode == 401 && _code(response) == 'TOKEN_EXPIRED' && await _refresh()) {
+      response = await once();
+    }
+    return _unwrap(response);
+  }
+
   Uri _uri(String path, Map<String, Object?>? query) {
     final params = <String, String>{
       for (final e in (query ?? const {}).entries)

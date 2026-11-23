@@ -113,7 +113,7 @@ class TeamRecord {
 }
 
 class CoachTeam {
-  const CoachTeam({required this.id, required this.name, this.sport, this.level, this.school, this.province});
+  const CoachTeam({required this.id, required this.name, this.sport, this.level, this.school, this.province, this.logoUrl});
 
   final int id;
   final String name;
@@ -121,6 +121,7 @@ class CoachTeam {
   final String? level;
   final String? school;
   final String? province;
+  final String? logoUrl;
 
   factory CoachTeam.fromJson(Map<String, dynamic> json) {
     final sport = json['sport'];
@@ -132,6 +133,7 @@ class CoachTeam {
       level: json['level'] as String?,
       school: school is Map ? school['name'] as String? : null,
       province: school is Map ? school['province'] as String? : null,
+      logoUrl: json['logoUrl'] as String?,
     );
   }
 }
