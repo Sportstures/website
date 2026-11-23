@@ -10,6 +10,7 @@ import '../../widgets/site/site_routes.dart';
 import '../../widgets/site/site_scaffold.dart';
 import '../../widgets/site/ui_kit.dart';
 import 'coach_guard.dart';
+import 'photo_badge.dart';
 
 /// The coach's home: team numbers, what is coming up, and what needs doing.
 class CoachHomePage extends StatelessWidget {
@@ -205,14 +206,22 @@ class _TeamHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: AppColors.green, borderRadius: BorderRadius.circular(10)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(team.name, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
-          if (details.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(details, style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13)),
-          ],
+          PhotoBadge(url: team.logoUrl, fallback: team.name, size: 56, square: true),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(team.name, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
+                if (details.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(details, style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13)),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );

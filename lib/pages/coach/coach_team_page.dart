@@ -11,6 +11,7 @@ import '../../widgets/site/site_routes.dart';
 import '../../widgets/site/site_scaffold.dart';
 import '../../widgets/site/ui_kit.dart';
 import 'coach_guard.dart';
+import 'coach_photos_card.dart';
 
 /// The coach's squad: approve join requests, set numbers and positions, add and remove players.
 class CoachTeamPage extends StatelessWidget {
@@ -193,6 +194,12 @@ class _SquadState extends State<_Squad> {
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          CoachPhotosCard(
+                            teamId: _teamId,
+                            teamName: '${widget.coach.team?['name'] ?? 'Team'}',
+                            coachName: [widget.coach.firstName, widget.coach.lastName].whereType<String>().join(' '),
+                          ),
+                          const SizedBox(height: 16),
                           if (_requests.isNotEmpty) ...[
                             _Requests(requests: _requests, onApprove: _approve, onReject: _reject),
                             const SizedBox(height: 16),
