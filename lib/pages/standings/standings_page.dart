@@ -294,9 +294,9 @@ class _StandingsViewState extends State<_StandingsView> {
       StandingsView.homeAway => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            card('Home record · $title', LeagueTable(standings: standingsFor(side: TeamSide.home), showZones: false)),
+            card('Home record · $title', LeagueTable(standings: standingsFor(side: TeamSide.home))),
             const SizedBox(height: 16),
-            card('Away record · $title', LeagueTable(standings: standingsFor(side: TeamSide.away), showZones: false)),
+            card('Away record · $title', LeagueTable(standings: standingsFor(side: TeamSide.away))),
           ],
         ),
       StandingsView.formGuide => card(title, FormGuideTable(standings: standings)),

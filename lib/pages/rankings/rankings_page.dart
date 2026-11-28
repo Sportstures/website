@@ -269,16 +269,16 @@ class _RankingsPageState extends State<RankingsPage> {
   Widget _buildTable(RankingType type, List<RankingEntry> entries) {
     final middleColumns = switch (type) {
       RankingType.regions => const [
-          SiteTableColumn('Schools', width: 70),
-          SiteTableColumn('Matches', width: 70),
+          SiteTableColumn('Schools', width: 70, hideOnNarrow: true),
+          SiteTableColumn('Matches', width: 70, hideOnNarrow: true),
         ],
       RankingType.teams => const [
-          SiteTableColumn('Region', width: 120, alignment: Alignment.centerLeft),
-          SiteTableColumn('Played', width: 60),
+          SiteTableColumn('Region', width: 120, alignment: Alignment.centerLeft, hideOnNarrow: true),
+          SiteTableColumn('Played', width: 60, hideOnNarrow: true),
         ],
       _ => const [
-          SiteTableColumn('Region', width: 120, alignment: Alignment.centerLeft),
-          SiteTableColumn('Sports played', width: 90),
+          SiteTableColumn('Region', width: 120, alignment: Alignment.centerLeft, hideOnNarrow: true),
+          SiteTableColumn('Sports played', width: 90, hideOnNarrow: true),
         ],
     };
 
