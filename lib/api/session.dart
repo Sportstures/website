@@ -110,6 +110,20 @@ class Session extends ChangeNotifier {
     return (data['retryAfterSeconds'] as num?)?.toInt() ?? 0;
   }
 
+  /// Emails a reset code if the account exists (the answer never says whether it does).
+  /// Returns how many seconds to wait before asking again.
+  Future<int> forgotPassword(String email) async {
+    final data = await api.post('/api/auth/forgot-password', body: {'email': email.trim()}, auth: false) as Map<String, dynamic>;
+    return (data['retryAfterSeconds'] as num?)?.toInt() ?? 0;
+  }
+
+  /// Sets a new password using the emailed code. The server signs every device out.
+  Future<void> resetPassword(String email, String code, String newPassword) async {
+    await api.post('/api/auth/reset-password',
+        body: {'email': email.trim(), 'code': code.trim(), 'newPassword': newPassword}, auth: false);
+    if (isSignedIn) await logout();
+  }
+
   Future<void> logout() async {
     final saved = await api.tokens.read();
     _user = null;
