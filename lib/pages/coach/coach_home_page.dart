@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../api/api_exception.dart';
 import '../../api/coach_api.dart';
+import '../../api/match_invitations_api.dart';
 import '../../api/session.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/formatters.dart';
@@ -150,6 +151,8 @@ class _Dashboard extends StatelessWidget {
               const SizedBox(height: 16),
               _RecentResults(fixtures: data.recentResults, teamId: team.id, form: record.form),
               const SizedBox(height: 16),
+              const _MatchInvitesCard(),
+              const SizedBox(height: 16),
               SectionCard(
                 title: 'Grow the league',
                 child: Padding(
@@ -191,6 +194,55 @@ class _Dashboard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The way into match invitations, saying how many are waiting for an answer.
+class _MatchInvitesCard extends StatefulWidget {
+  const _MatchInvitesCard();
+
+  @override
+  State<_MatchInvitesCard> createState() => _MatchInvitesCardState();
+}
+
+class _MatchInvitesCardState extends State<_MatchInvitesCard> {
+  late final Future<int> _waiting = MatchInvitationsApi(SessionScope.read(context).api)
+      .waitingCount()
+      // The count is a nicety: the button still works without it.
+      .then<int>((n) => n, onError: (Object _) => 0);
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionCard(
+      title: 'Arrange a match',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FutureBuilder<int>(
+              future: _waiting,
+              builder: (context, snapshot) {
+                final n = snapshot.data ?? 0;
+                return Text(
+                  n == 0
+                      ? 'Invite another school to play your team.'
+                      : (n == 1 ? '1 match invitation is waiting for your answer.' : '$n match invitations are waiting for your answer.'),
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.5,
+                    color: n == 0 ? AppColors.muted : AppColors.orange,
+                    fontWeight: n == 0 ? FontWeight.w400 : FontWeight.w800,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            SiteButton(label: 'MATCH INVITATIONS', small: true, onPressed: () => openSiteRoute(context, SiteRoutes.coachMatchInvites)),
+          ],
+        ),
+      ),
     );
   }
 }
