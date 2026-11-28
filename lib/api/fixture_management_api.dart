@@ -9,6 +9,7 @@ class ManagedFixture {
     required this.status,
     required this.matchType,
     required this.homeTeamId,
+    required this.awayTeamId,
     required this.homeName,
     required this.awayName,
     this.venue,
@@ -24,6 +25,7 @@ class ManagedFixture {
   final String status;
   final String matchType;
   final int homeTeamId;
+  final int awayTeamId;
   final String homeName;
   final String awayName;
   final String? venue;
@@ -50,6 +52,7 @@ class ManagedFixture {
       status: base.status,
       matchType: '${json['matchType'] ?? 'friendly'}',
       homeTeamId: base.homeTeamId,
+      awayTeamId: base.awayTeamId,
       homeName: base.homeName,
       awayName: base.awayName,
       venue: base.venue,

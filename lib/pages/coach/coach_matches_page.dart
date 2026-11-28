@@ -11,6 +11,7 @@ import '../../widgets/site/site_routes.dart';
 import '../../widgets/site/site_scaffold.dart';
 import '../../widgets/site/ui_kit.dart';
 import 'coach_guard.dart';
+import 'coach_live_page.dart';
 import 'lineup_dialog.dart';
 
 /// The coach's upcoming matches: edit, postpone, cancel and set the lineup.
@@ -243,6 +244,9 @@ class _MyMatchesState extends State<_MyMatches> {
           Wrap(
             spacing: 4,
             children: [
+              // Scoring opens an hour before kick-off, as the server allows.
+              if (f.status == 'live' || (f.status == 'scheduled' && f.startsAt.difference(DateTime.now()) <= const Duration(hours: 1)))
+                action(f.status == 'live' ? 'Open live match' : 'Start scoring', () => openSiteRoute(context, CoachLivePage.routeFor(f.id))),
               if (f.takesLineup) action(f.lineupIn(teamId) ? 'Edit lineup' : 'Set lineup', () => _lineup(f)),
               if (f.status == 'scheduled') ...[
                 action('Edit', () => _edit(f)),

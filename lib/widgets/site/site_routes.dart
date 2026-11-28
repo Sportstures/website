@@ -34,6 +34,9 @@ abstract final class SiteRoutes {
   /// Upcoming matches: edit, postpone, cancel and set lineups.
   static const coachMatches = '/coach/matches';
 
+  /// Score a match as it happens. Takes `?fixture=<id>`.
+  static const coachLive = '/coach/live';
+
   /// Invite another school to a match, and answer their invitations.
   static const coachMatchInvites = '/coach/match-invitations';
 
