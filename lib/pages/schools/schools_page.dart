@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/match_store.dart';
 import '../../data/models.dart';
 import '../../data/sports_data.dart';
 import '../../theme/app_colors.dart';
@@ -10,6 +11,7 @@ import '../../widgets/site/promo_card.dart';
 import '../../widgets/site/site_routes.dart';
 import '../../widgets/site/site_scaffold.dart';
 import '../../widgets/site/ui_kit.dart';
+import 'live_schools_view.dart';
 import 'widgets/browse_by_region_card.dart';
 import 'widgets/school_card.dart';
 import 'widgets/top_schools_card.dart';
@@ -113,6 +115,10 @@ class _SchoolsPageState extends State<SchoolsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // With a backend the schools come from the server; below is the sample-data version.
+    final api = MatchScope.maybeOf(context)?.api;
+    if (api != null) return LiveSchoolsView(api: api);
+
     final data = SportsData.instance;
     final rankings = SportsData.rankingsFor(data.results, RankingType.schools, now: DateTime.now());
     final rankOf = {for (final (i, entry) in rankings.indexed) entry.school!: i};
