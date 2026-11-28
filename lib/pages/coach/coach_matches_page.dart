@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../api/api_exception.dart';
 import '../../api/coach_api.dart';
 import '../../api/fixture_management_api.dart';
+import '../../api/match_results_api.dart';
 import '../../api/session.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/formatters.dart';
@@ -13,6 +14,7 @@ import '../../widgets/site/ui_kit.dart';
 import 'coach_guard.dart';
 import 'coach_live_page.dart';
 import 'lineup_dialog.dart';
+import 'result_dialogs.dart';
 
 /// The coach's upcoming matches: edit, postpone, cancel and set the lineup.
 class CoachMatchesPage extends StatelessWidget {
@@ -49,7 +51,10 @@ class _MyMatchesState extends State<_MyMatches> {
   late final FixtureManagementApi _api = FixtureManagementApi(SessionScope.read(context).api);
   late final CoachApi _coach = CoachApi(SessionScope.read(context).api);
 
+  late final MatchResultsApi _results = MatchResultsApi(SessionScope.read(context).api);
+
   List<ManagedFixture>? _fixtures;
+  List<CoachFixture> _played = const [];
   String? _loadError;
   String? _actionError;
   String? _notice;
@@ -69,9 +74,11 @@ class _MyMatchesState extends State<_MyMatches> {
     }
     try {
       final list = await _api.upcoming(teamId);
+      final played = await _api.played(teamId);
       if (!mounted) return;
       setState(() {
         _fixtures = list;
+        _played = played;
         _loadError = null;
       });
     } on ApiException catch (e) {
@@ -158,6 +165,65 @@ class _MyMatchesState extends State<_MyMatches> {
     await _load();
   }
 
+  Future<void> _open(Widget dialog) async {
+    final message = await showDialog<String>(context: context, builder: (_) => dialog);
+    if (message == null || !mounted) return;
+    setState(() {
+      _notice = message;
+      _actionError = null;
+    });
+    await _load();
+  }
+
+  Widget _playedRow(CoachFixture f) {
+    final teamId = widget.teamId!;
+    final home = f.isHome(teamId);
+    return Padding(
+      key: ValueKey('played-${f.id}'),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text('${home ? 'vs' : 'at'} ${f.opponentOf(teamId)}',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink)),
+              ),
+              if (f.hasScore)
+                Text('${f.homeScore} - ${f.awayScore}',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.green)),
+            ],
+          ),
+          Text('${formatShortDate(f.startsAt)} · ${f.homeName} v ${f.awayName}',
+              style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 4,
+            children: [
+              TextButton(
+                onPressed: () => _open(ReportDialog(api: _results, fixtureId: f.id, title: 'vs ${f.opponentOf(teamId)}')),
+                child: const Text('Match report'),
+              ),
+              if (home)
+                TextButton(
+                  onPressed: () => _open(ResultDialog(
+                    api: _results,
+                    fixtureId: f.id,
+                    homeName: f.homeName,
+                    awayName: f.awayName,
+                    homeScore: f.homeScore,
+                    awayScore: f.awayScore,
+                  )),
+                  child: const Text('Correct score'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final fixtures = _fixtures;
@@ -192,6 +258,10 @@ class _MyMatchesState extends State<_MyMatches> {
                               ? const EmptyState('No upcoming matches. Invite a school to arrange one.')
                               : DividedColumn(children: [for (final f in fixtures) _row(f)]),
                 ),
+                if (_played.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  SectionCard(title: 'Played matches', child: DividedColumn(children: [for (final f in _played) _playedRow(f)])),
+                ],
               ],
             ),
           ),
@@ -249,6 +319,9 @@ class _MyMatchesState extends State<_MyMatches> {
               // Scoring opens an hour before kick-off, as the server allows.
               if (f.status == 'live' || (f.status == 'scheduled' && f.startsAt.difference(DateTime.now()) <= const Duration(hours: 1)))
                 action(f.status == 'live' ? 'Open live match' : 'Start scoring', () => openSiteRoute(context, CoachLivePage.routeFor(f.id))),
+              // A match whose time has come can be given its final score by the home coach.
+              if (f.isHome(teamId) && f.status == 'scheduled' && !f.startsAt.isAfter(DateTime.now()))
+                action('Record result', () => _open(ResultDialog(api: _results, fixtureId: f.id, homeName: f.homeName, awayName: f.awayName))),
               if (f.takesLineup) action(f.lineupIn(teamId) ? 'Edit lineup' : 'Set lineup', () => _lineup(f)),
               if (f.status == 'scheduled') ...[
                 action('Edit', () => _edit(f)),

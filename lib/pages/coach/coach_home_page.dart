@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../api/api_exception.dart';
 import '../../api/coach_api.dart';
+import '../../api/fixture_management_api.dart';
+import '../../api/match_results_api.dart';
 import '../../api/match_invitations_api.dart';
 import '../../api/notifications_api.dart';
 import '../../api/session.dart';
@@ -13,6 +15,8 @@ import '../../widgets/site/site_routes.dart';
 import '../../widgets/site/site_scaffold.dart';
 import '../../widgets/site/ui_kit.dart';
 import 'coach_guard.dart';
+import 'lineup_dialog.dart';
+import 'result_dialogs.dart';
 import 'photo_badge.dart';
 
 /// The coach's home: team numbers, what is coming up, and what needs doing.
@@ -141,7 +145,7 @@ class _Dashboard extends StatelessWidget {
           main: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _ActionItems(items: data.actionItems, teamId: team.id),
+              _ActionItems(items: data.actionItems, teamId: team.id, onDone: onChanged),
               const SizedBox(height: 16),
               _Upcoming(fixtures: data.upcoming, teamId: team.id),
             ],
@@ -377,10 +381,37 @@ class _StatTile extends StatelessWidget {
 String _when(DateTime date) => '${formatShortDate(date)} · ${formatTime(date)}';
 
 class _ActionItems extends StatelessWidget {
-  const _ActionItems({required this.items, required this.teamId});
+  const _ActionItems({required this.items, required this.teamId, required this.onDone});
 
   final List<ActionItem> items;
   final int teamId;
+
+  /// Called after a to-do is completed, so the dashboard reloads.
+  final VoidCallback onDone;
+
+  /// Opens a to-do's dialog; once it reports success, says so and reloads.
+  Future<void> _run(BuildContext context, Widget dialog) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final message = await showDialog<String>(context: context, builder: (_) => dialog);
+    if (message == null) return;
+    messenger.showSnackBar(SnackBar(content: Text(message)));
+    onDone();
+  }
+
+  Widget _resultDialog(BuildContext context, CoachFixture f) => ResultDialog(
+        api: MatchResultsApi(SessionScope.read(context).api),
+        fixtureId: f.id,
+        homeName: f.homeName,
+        awayName: f.awayName,
+      );
+
+  Widget _lineupDialog(BuildContext context, CoachFixture f) {
+    final api = SessionScope.read(context).api;
+    return LineupDialog(api: FixtureManagementApi(api), coach: CoachApi(api), fixture: ManagedFixture.fromCoach(f), teamId: teamId);
+  }
+
+  Widget _reportDialog(BuildContext context, CoachFixture f) =>
+      ReportDialog(api: MatchResultsApi(SessionScope.read(context).api), fixtureId: f.id, title: 'vs ${f.opponentOf(teamId)}');
 
   ({String title, String detail, IconData icon, VoidCallback? onTap}) _describe(BuildContext context, ActionItem item) {
     final f = item.fixture;
@@ -390,19 +421,20 @@ class _ActionItems extends StatelessWidget {
           title: 'Record the result $versus',
           detail: 'Played ${_when(f!.startsAt)}',
           icon: Icons.scoreboard_outlined,
-          onTap: null,
+          // Only the home team's coach may record a score.
+          onTap: f.isHome(teamId) ? () => _run(context, _resultDialog(context, f)) : null,
         ),
       'submit_lineup' => (
           title: 'Submit your lineup $versus',
           detail: 'Kick-off ${_when(f!.startsAt)}',
           icon: Icons.format_list_numbered,
-          onTap: null,
+          onTap: () => _run(context, _lineupDialog(context, f)),
         ),
       'file_report' => (
           title: 'File the match report $versus',
           detail: 'Played ${_when(f!.startsAt)}',
           icon: Icons.description_outlined,
-          onTap: null,
+          onTap: () => _run(context, _reportDialog(context, f)),
         ),
       'review_join_requests' => (
           title: '${item.count} ${item.count == 1 ? 'player wants' : 'players want'} to join your team',

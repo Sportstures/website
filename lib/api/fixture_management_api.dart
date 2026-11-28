@@ -34,6 +34,20 @@ class ManagedFixture {
   final bool awayLineupIn;
 
   bool isHome(int teamId) => teamId == homeTeamId;
+
+  /// A match from the dashboard, which carries what the lineup screen needs.
+  factory ManagedFixture.fromCoach(CoachFixture f) => ManagedFixture(
+        id: f.id,
+        startsAt: f.startsAt,
+        status: f.status,
+        matchType: 'friendly',
+        homeTeamId: f.homeTeamId,
+        awayTeamId: f.awayTeamId,
+        homeName: f.homeName,
+        awayName: f.awayName,
+        venue: f.venue,
+        competition: f.competition,
+      );
   String opponentOf(int teamId) => isHome(teamId) ? awayName : homeName;
   bool lineupIn(int teamId) => isHome(teamId) ? homeLineupIn : awayLineupIn;
 
@@ -97,6 +111,16 @@ class FixtureManagementApi {
     final open = await read({'when': 'upcoming', 'order': 'asc'});
     final cancelled = await read({'status': 'cancelled', 'from': DateTime.now().toUtc().toIso8601String()});
     return [...open, ...cancelled]..sort((a, b) => a.startsAt.compareTo(b.startsAt));
+  }
+
+  /// The team's finished matches, newest first.
+  Future<List<CoachFixture>> played(int teamId, {int limit = 10}) async {
+    final body = await _client.get('/api/fixtures', query: {'teamId': teamId, 'when': 'past', 'order': 'desc', 'limit': limit})
+        as Map<String, dynamic>;
+    return [
+      for (final f in body['fixtures'] as List)
+        if ((f as Map)['status'] == 'finished') CoachFixture.fromJson(Map<String, dynamic>.from(f)),
+    ];
   }
 
   /// Changes only what is given.
