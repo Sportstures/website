@@ -16,6 +16,7 @@ import '../../widgets/site/site_scaffold.dart';
 import '../../widgets/site/ui_kit.dart';
 import 'widgets/ai_analyzer_card.dart';
 import 'widgets/date_strip.dart';
+import 'widgets/live_now_section.dart';
 import 'widgets/month_calendar_card.dart';
 import 'widgets/quick_filters_card.dart';
 
@@ -124,6 +125,7 @@ class _FixturesViewState extends State<_FixturesView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const LiveNowSection(),
                 FilterBar(
                   searchLabel: 'Search fixtures',
                   filters: _filters,

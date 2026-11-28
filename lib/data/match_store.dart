@@ -29,6 +29,9 @@ class MatchStore extends ChangeNotifier {
   String? _error;
   DateTime? _loadedAt;
 
+  /// The backend the matches come from, or null for sample data.
+  ApiClient? get api => _source?.api;
+
   MatchLoad get state => _state;
   SportsData? get data => _data;
 
