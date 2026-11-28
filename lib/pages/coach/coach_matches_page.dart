@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../api/api_exception.dart';
+import '../../api/competitions_api.dart';
+import '../../api/match_invitations_api.dart';
+import '../../api/team_details_api.dart';
 import '../../api/coach_api.dart';
 import '../../api/fixture_management_api.dart';
 import '../../api/match_results_api.dart';
@@ -11,6 +14,7 @@ import '../../widgets/site/page_hero.dart';
 import '../../widgets/site/site_routes.dart';
 import '../../widgets/site/site_scaffold.dart';
 import '../../widgets/site/ui_kit.dart';
+import 'add_match_dialog.dart';
 import 'coach_guard.dart';
 import 'coach_live_page.dart';
 import 'lineup_dialog.dart';
@@ -241,9 +245,27 @@ class _MyMatchesState extends State<_MyMatches> {
                 if (_actionError != null) _Banner(_actionError!, error: true),
                 SectionCard(
                   title: 'Upcoming matches',
-                  trailing: TextButton(
-                    onPressed: () => openSiteRoute(context, SiteRoutes.coachMatchInvites),
-                    child: const Text('Invite a school'),
+                  trailing: Wrap(
+                    spacing: 4,
+                    children: [
+                      if (widget.teamId != null)
+                        TextButton(
+                          onPressed: () {
+                            final api = SessionScope.read(context).api;
+                            _open(AddMatchDialog(
+                              teams: MatchInvitationsApi(api),
+                              fixtures: TeamDetailsApi(api),
+                              competitions: CompetitionsApi(api),
+                              teamId: widget.teamId!,
+                            ));
+                          },
+                          child: const Text('Add a match'),
+                        ),
+                      TextButton(
+                        onPressed: () => openSiteRoute(context, SiteRoutes.coachMatchInvites),
+                        child: const Text('Invite a school'),
+                      ),
+                    ],
                   ),
                   child: _loadError != null
                       ? Column(children: [
