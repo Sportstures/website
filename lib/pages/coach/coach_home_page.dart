@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../api/api_exception.dart';
 import '../../api/coach_api.dart';
 import '../../api/match_invitations_api.dart';
+import '../../api/notifications_api.dart';
 import '../../api/session.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/formatters.dart';
@@ -151,6 +152,8 @@ class _Dashboard extends StatelessWidget {
               const SizedBox(height: 16),
               _RecentResults(fixtures: data.recentResults, teamId: team.id, form: record.form),
               const SizedBox(height: 16),
+              const _NotificationsCard(),
+              const SizedBox(height: 16),
               const _MatchInvitesCard(),
               const SizedBox(height: 16),
               SectionCard(
@@ -194,6 +197,52 @@ class _Dashboard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The way into the inbox, saying how much is unread.
+class _NotificationsCard extends StatefulWidget {
+  const _NotificationsCard();
+
+  @override
+  State<_NotificationsCard> createState() => _NotificationsCardState();
+}
+
+class _NotificationsCardState extends State<_NotificationsCard> {
+  late final Future<int> _unread = NotificationsApi(SessionScope.read(context).api)
+      .unreadCount()
+      // The count is a nicety: the button still works without it.
+      .then<int>((n) => n, onError: (Object _) => 0);
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionCard(
+      title: 'Notifications',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FutureBuilder<int>(
+              future: _unread,
+              builder: (context, snapshot) {
+                final n = snapshot.data ?? 0;
+                return Text(
+                  n == 0 ? 'Nothing new.' : (n == 1 ? '1 unread notification.' : '$n unread notifications.'),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: n == 0 ? AppColors.muted : AppColors.orange,
+                    fontWeight: n == 0 ? FontWeight.w400 : FontWeight.w800,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            SiteButton(label: 'OPEN NOTIFICATIONS', small: true, onPressed: () => openSiteRoute(context, SiteRoutes.coachNotifications)),
+          ],
+        ),
+      ),
     );
   }
 }
