@@ -127,6 +127,7 @@ class MatchInvitationsApi {
     required String matchType,
     String? venue,
     String? message,
+    int? competitionId,
   }) async {
     await _client.post('/api/match-invitations', body: {
       'teamId': teamId,
@@ -135,6 +136,7 @@ class MatchInvitationsApi {
       'matchDate': matchDate.toUtc().toIso8601String(),
       'playAt': atHome ? 'home' : 'away',
       'matchType': matchType,
+      'competitionId': ?competitionId,
       if (venue != null && venue.isNotEmpty) 'venue': venue,
       if (message != null && message.isNotEmpty) 'message': message,
     });
