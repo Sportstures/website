@@ -5,6 +5,7 @@ import '../../config/site_links.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/site/page_hero.dart';
+import '../../widgets/site/platform_stats.dart';
 import '../../widgets/site/site_routes.dart';
 import '../../widgets/site/site_scaffold.dart';
 import '../../widgets/site/ui_kit.dart';
@@ -32,22 +33,33 @@ class AboutPage extends StatelessWidget {
               children: [
                 const _OurStory(),
                 const SizedBox(height: 48),
-                StatsBand(
-                  valueColor: AppColors.orange,
-                  stats: [
-                    (Icons.school_outlined, formatThousands(SportsData.schools.length), 'Registered Schools'),
-                    (Icons.location_on_outlined, '${SportsData.provinces.length}', 'Provinces'),
-                    (
-                      Icons.calendar_month_outlined,
-                      formatThousands(data.fixtures.length + data.results.length),
-                      'Fixtures Managed',
-                    ),
-                    (
-                      Icons.groups_outlined,
-                      formatThousands(SportsData.schools.fold(0, (sum, s) => sum + s.athletes)),
-                      'Student Athletes',
-                    ),
-                  ],
+                PlatformStats(
+                  sample: StatsBand(
+                    valueColor: AppColors.orange,
+                    stats: [
+                      (Icons.school_outlined, formatThousands(SportsData.schools.length), 'Registered Schools'),
+                      (Icons.location_on_outlined, '${SportsData.provinces.length}', 'Provinces'),
+                      (
+                        Icons.calendar_month_outlined,
+                        formatThousands(data.fixtures.length + data.results.length),
+                        'Fixtures Managed',
+                      ),
+                      (
+                        Icons.groups_outlined,
+                        formatThousands(SportsData.schools.fold(0, (sum, s) => sum + s.athletes)),
+                        'Student Athletes',
+                      ),
+                    ],
+                  ),
+                  live: (counts) => StatsBand(
+                    valueColor: AppColors.orange,
+                    stats: [
+                      (Icons.school_outlined, formatThousands(counts.schools), 'Registered Schools'),
+                      (Icons.location_on_outlined, '${counts.provinces}', 'Provinces'),
+                      (Icons.sports, '${counts.sports}', 'Sports Played'),
+                      (Icons.scoreboard_outlined, formatThousands(counts.matches), 'Matches Played'),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 56),
                 const _MissionAndVision(),
