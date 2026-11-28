@@ -31,6 +31,9 @@ abstract final class SiteRoutes {
   /// Invite a coach from another school (by email or a shareable link).
   static const coachInvite = '/coach/invite';
 
+  /// Upcoming matches: edit, postpone, cancel and set lineups.
+  static const coachMatches = '/coach/matches';
+
   /// Invite another school to a match, and answer their invitations.
   static const coachMatchInvites = '/coach/match-invitations';
 
