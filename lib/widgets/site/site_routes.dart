@@ -39,6 +39,9 @@ abstract final class SiteRoutes {
   /// Competitions the coach organises, and their table rules.
   static const coachCompetitions = '/coach/competitions';
 
+  /// Every competition.
+  static const competitions = '/competitions';
+
   /// One competition's table. Takes `?id=<id>`.
   static const competition = '/competition';
 

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../api/api_client.dart';
 import '../../api/api_exception.dart';
+import '../../api/coach_api.dart';
 import '../../api/competitions_api.dart';
 import '../../api/session.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/formatters.dart';
 import '../../widgets/site/page_hero.dart';
 import '../../widgets/site/site_routes.dart';
 import '../../widgets/site/site_scaffold.dart';
@@ -38,6 +40,7 @@ class _CompetitionViewState extends State<_CompetitionView> {
   static const _notFound = 'We could not find that competition.';
 
   CompetitionTableData? _data;
+  List<CoachFixture> _matches = const [];
   String? _error;
 
   @override
@@ -56,9 +59,67 @@ class _CompetitionViewState extends State<_CompetitionView> {
     try {
       final data = await CompetitionsApi(widget.api).table(id);
       if (mounted) setState(() => _data = data);
+      await _loadMatches(id);
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.status == 404 ? _notFound : e.message);
     }
+  }
+
+  Future<void> _loadMatches(int id) async {
+    try {
+      final body = await widget.api.get('/api/fixtures', query: {'competitionId': id, 'limit': 100}, auth: false) as Map<String, dynamic>;
+      final matches = [for (final f in body['fixtures'] as List) CoachFixture.fromJson(Map<String, dynamic>.from(f as Map))];
+      if (mounted) setState(() => _matches = matches);
+    } on ApiException {
+      // The table is the main thing; it stays without the match lists.
+    }
+  }
+
+  Widget _matchCard(String title, List<CoachFixture> matches) => SectionCard(
+        title: title,
+        child: DividedColumn(
+          children: [
+            for (final f in matches)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${f.homeName} vs ${f.awayName}', style: tableStrongStyle),
+                          Text(
+                            ['${formatShortDate(f.startsAt)}, ${formatTime(f.startsAt)}', if (f.venue != null && f.venue!.isNotEmpty) f.venue!].join(' · '),
+                            style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (f.status == 'finished' && f.hasScore)
+                      Text('${f.homeScore} - ${f.awayScore}',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.green))
+                    else if (f.status != 'scheduled')
+                      StatusPill(f.status, color: f.status == 'live' ? Colors.red : AppColors.orange),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      );
+
+  /// Matches still to be played (a past day without a result is left out), and the results, newest first.
+  List<Widget> _matchSections() {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final upcoming = [
+      for (final f in _matches)
+        if (f.status == 'live' || ((f.status == 'scheduled' || f.status == 'postponed') && !f.startsAt.isBefore(today))) f,
+    ]..sort((a, b) => a.startsAt.compareTo(b.startsAt));
+    final results = [for (final f in _matches) if (f.status == 'finished') f]..sort((a, b) => b.startsAt.compareTo(a.startsAt));
+    return [
+      if (upcoming.isNotEmpty) ...[const SizedBox(height: 16), _matchCard('Upcoming matches', upcoming)],
+      if (results.isNotEmpty) ...[const SizedBox(height: 16), _matchCard('Results', results)],
+    ];
   }
 
   @override
@@ -77,7 +138,7 @@ class _CompetitionViewState extends State<_CompetitionView> {
           child: Padding(
             padding: const EdgeInsets.only(top: 28, bottom: 56),
             child: data != null
-                ? _table(data)
+                ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [_table(data), ..._matchSections()])
                 : _error == null
                     ? const Padding(padding: EdgeInsets.all(48), child: Center(child: CircularProgressIndicator()))
                     : SectionCard(
