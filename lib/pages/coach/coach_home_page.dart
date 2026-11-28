@@ -240,6 +240,13 @@ class _MatchInvitesCardState extends State<_MatchInvitesCard> {
             ),
             const SizedBox(height: 12),
             SiteButton(label: 'MATCH INVITATIONS', small: true, onPressed: () => openSiteRoute(context, SiteRoutes.coachMatchInvites)),
+            const SizedBox(height: 8),
+            SiteButton(
+              label: 'MANAGE MATCHES',
+              small: true,
+              variant: SiteButtonVariant.outline,
+              onPressed: () => openSiteRoute(context, SiteRoutes.coachMatches),
+            ),
           ],
         ),
       ),

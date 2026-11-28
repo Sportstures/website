@@ -9,6 +9,7 @@ import 'pages/auth/forgot_password_page.dart';
 import 'pages/coach/coach_home_page.dart';
 import 'pages/coach/coach_invite_page.dart';
 import 'pages/coach/coach_match_invites_page.dart';
+import 'pages/coach/coach_matches_page.dart';
 import 'pages/coach/coach_team_page.dart';
 import 'pages/contact/contact_page.dart';
 import 'pages/for_schools/for_schools_page.dart';
@@ -107,6 +108,7 @@ class _TobunAppState extends State<TobunApp> {
         SiteRoutes.coachTeam: (_) => const CoachTeamPage(),
         SiteRoutes.coachInvite: (_) => const CoachInvitePage(),
         SiteRoutes.coachMatchInvites: (_) => const CoachMatchInvitesPage(),
+        SiteRoutes.coachMatches: (_) => const CoachMatchesPage(),
         SiteRoutes.help: (_) => const HelpPage(),
         SiteRoutes.terms: (_) => const PolicyPage(policy: Policy.terms),
         SiteRoutes.privacy: (_) => const PolicyPage(policy: Policy.privacy),
