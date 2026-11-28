@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../ai/ai_provider.dart';
 import '../../ai/ai_service.dart';
+import '../../data/match_store.dart';
 import '../../data/models.dart';
 import '../../data/sports_data.dart';
 import '../../theme/app_colors.dart';
@@ -12,6 +13,7 @@ import '../../widgets/site/promo_card.dart';
 import '../../widgets/site/site_routes.dart';
 import '../../widgets/site/site_scaffold.dart';
 import '../../widgets/site/ui_kit.dart';
+import 'live_school_profile_view.dart';
 
 /// One school's record: who they are, what they play, how they are going.
 ///
@@ -25,6 +27,15 @@ class SchoolProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final requested = ModalRoute.of(context)?.settings.arguments;
+
+    // With a backend the page is `/school?id=<id>`; a School passed along is looked up by its name.
+    final api = MatchScope.maybeOf(context)?.api;
+    if (api != null) {
+      final id = int.tryParse(Uri.tryParse(ModalRoute.of(context)?.settings.name ?? '')?.queryParameters['id'] ?? '');
+      final name = school?.name ?? (requested is School ? requested.name : null);
+      return LiveSchoolProfileView(key: ValueKey((id, name)), api: api, schoolId: id, schoolName: name);
+    }
+
     final chosen = school ?? (requested is School ? requested : SportsData.schools.first);
 
     final data = SportsData.instance;
