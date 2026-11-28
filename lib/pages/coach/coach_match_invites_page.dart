@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../api/api_exception.dart';
+import '../../api/competitions_api.dart';
 import '../../api/match_invitations_api.dart';
 import '../../api/session.dart';
 import '../../theme/app_colors.dart';
@@ -279,6 +280,10 @@ class _InviteFormState extends State<_InviteForm> {
   DateTime? _date;
   TimeOfDay _time = const TimeOfDay(hour: 15, minute: 0);
   bool _atHome = true;
+
+  /// Competitions for this sport that the match could count towards.
+  List<Competition> _competitions = const [];
+  int? _competitionId;
   String _type = 'friendly';
   bool _searching = false;
   bool _sending = false;
@@ -287,7 +292,20 @@ class _InviteFormState extends State<_InviteForm> {
   @override
   void initState() {
     super.initState();
-    _find();
+    _find().then((_) => _loadCompetitions());
+  }
+
+  Future<void> _loadCompetitions() async {
+    final sportId = _mine?.sportId;
+    if (!mounted || sportId == null) return;
+    try {
+      final all = await CompetitionsApi(SessionScope.read(context).api).list(sportId: sportId);
+      // Ones I organise first; finished ones are left out.
+      final open = [for (final c in all) if (c.status != 'completed') c]..sort((a, b) => (b.canEdit ? 1 : 0) - (a.canEdit ? 1 : 0));
+      if (mounted) setState(() => _competitions = open);
+    } on ApiException {
+      // An invitation can be sent without a competition.
+    }
   }
 
   @override
@@ -356,6 +374,7 @@ class _InviteFormState extends State<_InviteForm> {
         matchType: _type,
         venue: _venue.text.trim(),
         message: _message.text.trim(),
+        competitionId: _competitionId,
       );
       if (!mounted) return;
       setState(() {
@@ -437,6 +456,19 @@ class _InviteFormState extends State<_InviteForm> {
               items: [for (final e in _matchTypes.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
               onChanged: (v) => setState(() => _type = v ?? _type),
             ),
+            if (_competitions.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int?>(
+                initialValue: _competitionId,
+                isExpanded: true,
+                decoration: _input('Competition (optional)'),
+                items: [
+                  const DropdownMenuItem<int?>(value: null, child: Text('None')),
+                  for (final c in _competitions) DropdownMenuItem<int?>(value: c.id, child: Text(c.name, overflow: TextOverflow.ellipsis)),
+                ],
+                onChanged: (v) => setState(() => _competitionId = v),
+              ),
+            ],
             const SizedBox(height: 12),
             TextField(controller: _message, maxLength: 500, maxLines: 2, decoration: _input('Message to their coach (optional)')),
             if (_error != null) _Banner(_error!, error: true),

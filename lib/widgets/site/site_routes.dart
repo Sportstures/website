@@ -36,6 +36,12 @@ abstract final class SiteRoutes {
 
   static const coachNotifications = '/coach/notifications';
 
+  /// Competitions the coach organises, and their table rules.
+  static const coachCompetitions = '/coach/competitions';
+
+  /// One competition's table. Takes `?id=<id>`.
+  static const competition = '/competition';
+
   /// Score a match as it happens. Takes `?fixture=<id>`.
   static const coachLive = '/coach/live';
 
