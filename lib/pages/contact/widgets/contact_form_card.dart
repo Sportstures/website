@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../api/api_exception.dart';
+import '../../../api/session.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/site/ui_kit.dart';
 import 'contact_card.dart';
@@ -23,13 +25,17 @@ class ContactFormCard extends StatefulWidget {
 }
 
 class ContactFormCardState extends State<ContactFormCard> {
-  static const _subjects = [
-    'Registering my school',
-    'Fixtures & results',
-    'Account & login',
-    'Partnerships & sponsorship',
-    'Something else',
-  ];
+  /// Each subject and the support topic the backend files it under.
+  static const _subjects = {
+    'Registering my school': 'account',
+    'Fixtures & results': 'matches',
+    'Account & login': 'account',
+    'Partnerships & sponsorship': 'other',
+    'Something else': 'other',
+  };
+
+  var _sending = false;
+  String? _error;
 
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
@@ -52,15 +58,44 @@ class ContactFormCardState extends State<ContactFormCard> {
         _showEnquiryError = false;
       });
 
-  void _send() {
+  Future<void> _send() async {
+    if (_sending) return;
     final fieldsValid = _formKey.currentState?.validate() ?? false;
     setState(() => _showEnquiryError = _enquiry == null);
     if (!fieldsValid || _enquiry == null) return;
 
-    // TODO: POST the message to the Node/JS backend; this only confirms locally for now
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text("Thanks, ${_name.text.trim()}! We'll get back to you soon.")));
+    final session = SessionScope.read(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    try {
+      // Signed in, the server replies to the account's own name and email.
+      final answer = await session.api.post('/api/support/messages', auth: session.isSignedIn, body: {
+        'topic': _subjects[_subject],
+        'subject': '$_subject (${_enquiry!.label})',
+        'message': _message.text.trim(),
+        'name': _name.text.trim(),
+        'email': _email.text.trim(),
+        'app': {'platform': 'web'},
+      }) as Map<String, dynamic>;
+      if (!mounted) return;
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('${answer['message'] ?? 'Thanks. Your message has been sent.'}')));
+    } on ApiException catch (e) {
+      // Keep what was written so it can be sent again.
+      if (mounted) {
+        setState(() {
+          _sending = false;
+          _error = e.status == 429
+              ? 'Too many messages just now. Please try again later.'
+              : (e.fieldErrors.isNotEmpty ? e.fieldErrors.values.first : e.message);
+        });
+      }
+      return;
+    }
 
     _formKey.currentState!.reset();
     _name.clear();
@@ -69,6 +104,7 @@ class ContactFormCardState extends State<ContactFormCard> {
     setState(() {
       _subject = null;
       _enquiry = null;
+      _sending = false;
     });
   }
 
@@ -171,7 +207,7 @@ class ContactFormCardState extends State<ContactFormCard> {
               style: inputStyle,
               hint: const Text('What is this regarding?', style: TextStyle(fontSize: 12, color: AppColors.muted)),
               decoration: _decoration(''),
-              items: [for (final subject in _subjects) DropdownMenuItem(value: subject, child: Text(subject))],
+              items: [for (final subject in _subjects.keys) DropdownMenuItem(value: subject, child: Text(subject))],
               onChanged: (value) => _subject = value,
               validator: (value) => value == null ? 'Required' : null,
             ),
@@ -211,15 +247,25 @@ class ContactFormCardState extends State<ContactFormCard> {
               minLines: 4,
               maxLines: 8,
               decoration: _decoration('Tell us more about your enquiry'),
-              validator: _required,
+              validator: (value) {
+                final length = (value ?? '').trim().length;
+                if (length == 0) return 'Required';
+                if (length < 10) return 'Please write at least 10 characters';
+                return length > 5000 ? 'Please keep it under 5000 characters' : null;
+              },
             ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(_error!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFDC2626))),
+              ),
             const SizedBox(height: 20),
             SiteButton(
-              label: 'SEND MESSAGE',
+              label: _sending ? 'SENDING…' : 'SEND MESSAGE',
               icon: Icons.send_outlined,
               expand: true,
               small: true,
-              onPressed: _send,
+              onPressed: _sending ? null : _send,
             ),
             const SizedBox(height: 10),
             const Row(
