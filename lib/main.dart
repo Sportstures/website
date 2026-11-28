@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'api/api_client.dart';
 import 'api/session.dart';
@@ -29,6 +30,9 @@ import 'pages/support/policy_page.dart';
 import 'widgets/site/site_routes.dart';
 
 void main() {
+  // Plain addresses such as /signup?invite=<code>, which is what invitation links use. The host must
+  // serve index.html for every path (a rewrite of /* to /index.html). Does nothing outside the web.
+  usePathUrlStrategy();
   runApp(const TobunApp());
 }
 
