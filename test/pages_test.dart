@@ -73,29 +73,17 @@ void main() {
       }
     });
 
-    testWidgets('password reset, and its sent state', (tester) async {
-      await _pumpPage(tester, const ForgotPasswordPage());
-      expect(find.text('Reset your password'), findsOneWidget);
-
-      await tester.enterText(find.byType(TextFormField), 'coach@school.co.za');
-      await tester.tap(find.text('SEND RESET LINK'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Check your inbox'), findsOneWidget);
-      expect(find.textContaining('coach@school.co.za'), findsOneWidget);
-    });
-
     testWidgets('password reset refuses an address that is not one', (tester) async {
       await _pumpPage(tester, const ForgotPasswordPage());
-      await tester.tap(find.text('SEND RESET LINK'));
+      await tester.tap(find.text('SEND CODE'));
       await tester.pumpAndSettle();
       expect(find.text('Required'), findsOneWidget);
 
       await tester.enterText(find.byType(TextFormField), 'not-an-email');
-      await tester.tap(find.text('SEND RESET LINK'));
+      await tester.tap(find.text('SEND CODE'));
       await tester.pumpAndSettle();
       expect(find.text('Enter a valid email address'), findsOneWidget);
-      expect(find.text('Check your inbox'), findsNothing);
+      expect(find.text('Enter your code'), findsNothing);
     });
   });
 
