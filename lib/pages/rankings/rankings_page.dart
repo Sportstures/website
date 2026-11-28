@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/match_store.dart';
 import '../../data/models.dart';
 import '../../data/sports_data.dart';
 import '../../theme/app_colors.dart';
@@ -10,6 +11,7 @@ import '../../widgets/site/page_hero.dart';
 import '../../widgets/site/site_routes.dart';
 import '../../widgets/site/site_scaffold.dart';
 import '../../widgets/site/ui_kit.dart';
+import 'live_rankings_view.dart';
 import 'widgets/ranking_sidebar_cards.dart';
 import 'widgets/top_by_region.dart';
 
@@ -84,6 +86,10 @@ class _RankingsPageState extends State<RankingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // With a backend the figures come from the server; below is the sample-data version.
+    final api = MatchScope.maybeOf(context)?.api;
+    if (api != null) return LiveRankingsView(api: api, initialType: _type);
+
     final now = DateTime.now();
     final query = _applied;
     final results = SportsData.instance.results.where((result) {
