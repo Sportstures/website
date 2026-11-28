@@ -365,6 +365,8 @@ class _SquadTable extends StatelessWidget {
   final Future<void> Function(RosterMember) onEdit;
   final Future<void> Function(RosterMember) onRemove;
 
+  static const fullWidth = 640.0;
+
   @override
   Widget build(BuildContext context) {
     return SectionCard(
@@ -374,19 +376,19 @@ class _SquadTable extends StatelessWidget {
       child: squad.isEmpty
           ? const Padding(padding: EdgeInsets.all(16), child: EmptyState('No players yet. Add learners from your school below.'))
           : SiteTable(
-              minWidth: 640,
+              minWidth: fullWidth,
               columns: const [
                 SiteTableColumn('#', width: 56),
                 SiteTableColumn('Player', alignment: Alignment.centerLeft),
-                SiteTableColumn('Grade', width: 130),
-                SiteTableColumn('Position', width: 130),
-                SiteTableColumn('', width: 150),
+                SiteTableColumn('Grade', width: 130, hideOnNarrow: true),
+                SiteTableColumn('Position', width: 130, hideOnNarrow: true),
+                SiteTableColumn('', width: 96),
               ],
               rows: [
                 for (final m in squad)
                   [
                     Text(m.jerseyNumber?.toString() ?? '–', style: tableStrongStyle),
-                    Text(m.name, style: tableStrongStyle),
+                    _PlayerName(m),
                     Text(m.gradeLabel.isEmpty ? '–' : m.gradeLabel, style: tableCellStyle),
                     Text(m.position ?? '–', style: tableCellStyle),
                     Row(
@@ -399,6 +401,28 @@ class _SquadTable extends StatelessWidget {
                   ],
               ],
             ),
+    );
+  }
+}
+
+/// The player's name, with grade and position underneath when their columns do not fit.
+class _PlayerName extends StatelessWidget {
+  const _PlayerName(this.player);
+
+  final RosterMember player;
+
+  @override
+  Widget build(BuildContext context) {
+    // The same width at which the table drops its optional columns.
+    final narrow = MediaQuery.sizeOf(context).width < _SquadTable.fullWidth;
+    final details = [player.gradeLabel, player.position ?? ''].where((s) => s.isNotEmpty).join(' · ');
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(player.name, style: tableStrongStyle),
+        if (narrow && details.isNotEmpty) Text(details, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+      ],
     );
   }
 }

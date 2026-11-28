@@ -38,28 +38,12 @@ class _RankCell extends StatelessWidget {
 String _signed(int value) => value > 0 ? '+$value' : '$value';
 
 class LeagueTable extends StatelessWidget {
-  const LeagueTable({super.key, required this.standings, this.showZones = true});
-
-  static const qualification = AppColors.greenBright;
-  static const playOff = AppColors.orange;
-  static const relegation = Color(0xFFDC2626);
+  const LeagueTable({super.key, required this.standings});
 
   final List<SchoolStanding> standings;
-  final bool showZones;
-
-  // TODO: confirm how many places qualify, go to play-offs or are relegated
-  Color? _zone(int index) {
-    if (!showZones || standings.length < 6) return null;
-    if (index < 2) return qualification;
-    if (index < 4) return playOff;
-    if (index >= standings.length - 2) return relegation;
-    return null;
-  }
 
   @override
   Widget build(BuildContext context) {
-    final zonesShown = showZones && standings.length >= 6;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -69,10 +53,10 @@ class LeagueTable extends StatelessWidget {
             _rankColumn,
             _schoolColumn,
             for (final label in ['P', 'W', 'D', 'L', 'GF', 'GA', 'GD'])
-              SiteTableColumn(label, width: 38),
+              // A phone keeps played, goal difference and points.
+              SiteTableColumn(label, width: 38, hideOnNarrow: label != 'P' && label != 'GD'),
             const SiteTableColumn('Pts', width: 44),
           ],
-          rowMarkers: [for (var i = 0; i < standings.length; i++) _zone(i)],
           rows: [
             for (final (i, s) in standings.indexed)
               [
@@ -92,42 +76,7 @@ class LeagueTable extends StatelessWidget {
             style: TextStyle(fontSize: 11, color: AppColors.muted, height: 1.4),
           ),
         ),
-        if (zonesShown)
-          const Padding(
-            padding: EdgeInsets.all(14),
-            child: Wrap(
-              spacing: 20,
-              runSpacing: 8,
-              children: [
-                _ZoneKey(color: qualification, label: 'Champ Region qualification'),
-                _ZoneKey(color: playOff, label: 'Play-off qualification'),
-                _ZoneKey(color: relegation, label: 'Relegation'),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _ZoneKey extends StatelessWidget {
-  const _ZoneKey({required this.color, required this.label});
-
-  final Color color;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
-        ),
-        const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+        const SizedBox(height: 14),
       ],
     );
   }
@@ -237,7 +186,7 @@ class CleanSheetsTable extends StatelessWidget {
         _schoolColumn,
         SiteTableColumn('P', width: 44),
         SiteTableColumn('Clean sheets', width: 90),
-        SiteTableColumn('%', width: 56),
+        SiteTableColumn('%', width: 56, hideOnNarrow: true),
       ],
       rows: [
         for (final (i, s) in sorted.indexed)

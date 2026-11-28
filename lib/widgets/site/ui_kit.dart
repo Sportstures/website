@@ -178,7 +178,7 @@ class CountLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      '$count ${count == 1 ? noun : '${noun}s'}'.toUpperCase(),
+      '$count ${count == 1 ? noun : '$noun${noun.endsWith('ch') ? 'es' : 's'}'}'.toUpperCase(),
       style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.muted),
     );
   }
@@ -440,13 +440,16 @@ class StatsBand extends StatelessWidget {
 }
 
 class SiteTableColumn {
-  const SiteTableColumn(this.label, {this.width, this.alignment = Alignment.center});
+  const SiteTableColumn(this.label, {this.width, this.alignment = Alignment.center, this.hideOnNarrow = false});
 
   final String label;
 
   /// Fixed width, or null to take the remaining space.
   final double? width;
   final Alignment alignment;
+
+  /// Left out when the screen is too narrow for the whole table.
+  final bool hideOnNarrow;
 }
 
 const tableCellStyle = TextStyle(fontSize: 12, color: AppColors.ink);
@@ -466,11 +469,14 @@ class SiteTable extends StatelessWidget {
   final List<SiteTableColumn> columns;
   final List<List<Widget>> rows;
 
-  /// Optional coloured edge per row, e.g. qualification zones.
+  /// Optional coloured edge per row.
   final List<Color?>? rowMarkers;
   final double minWidth;
 
-  Widget _line(List<Widget> cells, {Color? marker, Color? background}) {
+  /// The least a stretching column (a name) gets before the table scrolls sideways.
+  static const _narrowNameWidth = 110.0;
+
+  Widget _line(List<int> shown, List<Widget> cells, {Color? marker, Color? background}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -479,13 +485,13 @@ class SiteTable extends StatelessWidget {
       ),
       child: Row(
         children: [
-          for (final (i, column) in columns.indexed)
-            if (column.width == null)
-              Expanded(child: Align(alignment: column.alignment, child: cells[i]))
+          for (final i in shown)
+            if (columns[i].width == null)
+              Expanded(child: Align(alignment: columns[i].alignment, child: cells[i]))
             else
               SizedBox(
-                width: column.width,
-                child: Align(alignment: column.alignment, child: cells[i]),
+                width: columns[i].width,
+                child: Align(alignment: columns[i].alignment, child: cells[i]),
               ),
         ],
       ),
@@ -494,10 +500,11 @@ class SiteTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final table = Column(
+    Widget table(List<int> shown) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _line(
+          shown,
           [
             for (final column in columns)
               Text(
@@ -509,7 +516,7 @@ class SiteTable extends StatelessWidget {
         ),
         DividedColumn(
           children: [
-            for (final (i, row) in rows.indexed) _line(row, marker: rowMarkers?[i]),
+            for (final (i, row) in rows.indexed) _line(shown, row, marker: rowMarkers?[i]),
           ],
         ),
       ],
@@ -517,10 +524,15 @@ class SiteTable extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth >= minWidth) return table;
+        if (constraints.maxWidth >= minWidth) return table([for (var i = 0; i < columns.length; i++) i]);
+
+        // Narrow: drop the optional columns, and scroll only if what is left still does not fit.
+        final shown = [for (var i = 0; i < columns.length; i++) if (!columns[i].hideOnNarrow) i];
+        final needed = shown.fold<double>(30, (width, i) => width + (columns[i].width ?? _narrowNameWidth));
+        if (needed <= constraints.maxWidth) return table(shown);
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: SizedBox(width: minWidth, child: table),
+          child: SizedBox(width: needed, child: table(shown)),
         );
       },
     );

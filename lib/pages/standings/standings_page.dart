@@ -73,8 +73,14 @@ class _StandingsViewState extends State<_StandingsView> {
     return (counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value))).first.key;
   }
 
-  /// U/19 when the data has it, otherwise every age group.
-  String? get _defaultAgeGroup => widget.data.ageGroupOptions.contains('U/19') ? 'U/19' : null;
+  /// U/19 when the opening sport has U/19 results (the sample data always does), otherwise every
+  /// age group, so the page does not open on an empty table.
+  String? get _defaultAgeGroup {
+    if (!widget.data.ageGroupOptions.contains('U/19')) return null;
+    if (widget.data.isSample) return 'U/19';
+    final sport = _defaultSport;
+    return widget.data.results.any((r) => r.fixture.sport == sport && r.fixture.ageGroup == 'U/19') ? 'U/19' : null;
+  }
 
   /// Every (sport, age group) that has results, most results first. Null for the sample data,
   /// whose card keeps its built-in suggestions.
@@ -288,9 +294,9 @@ class _StandingsViewState extends State<_StandingsView> {
       StandingsView.homeAway => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            card('Home record · $title', LeagueTable(standings: standingsFor(side: TeamSide.home), showZones: false)),
+            card('Home record · $title', LeagueTable(standings: standingsFor(side: TeamSide.home))),
             const SizedBox(height: 16),
-            card('Away record · $title', LeagueTable(standings: standingsFor(side: TeamSide.away), showZones: false)),
+            card('Away record · $title', LeagueTable(standings: standingsFor(side: TeamSide.away))),
           ],
         ),
       StandingsView.formGuide => card(title, FormGuideTable(standings: standings)),

@@ -175,10 +175,7 @@ void main() {
       expect(summary.headline, contains(standings.first.school.name));
       expect(summary.insights, isNotEmpty);
       expect(summary.insights.first.headline, contains(standings.first.school.name));
-      expect(
-        summary.sampleSize,
-        standings.fold<int>(0, (sum, standing) => sum + standing.played),
-      );
+      expect(summary.sampleSize, football.length, reason: 'each match counts once, though two schools played it');
     });
 
     test('a table with nobody in it does not pretend to have a leader', () {

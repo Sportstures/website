@@ -282,7 +282,8 @@ class LocalAiService implements AiService {
         (false, false) => '${leader.school.name} are pulling clear',
       },
       insights: insights.take(4).toList(growable: false),
-      sampleSize: played.fold(0, (sum, standing) => sum + standing.played),
+      // Each match appears in two schools' "played" figures.
+      sampleSize: (played.fold(0, (sum, standing) => sum + standing.played) + 1) ~/ 2,
     );
   }
 

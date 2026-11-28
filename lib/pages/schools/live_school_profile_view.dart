@@ -121,7 +121,13 @@ class _LiveSchoolProfileViewState extends State<LiveSchoolProfileView> {
             children: [
               _teams(data.teams),
               const SizedBox(height: 16),
-              _matches('Upcoming fixtures', data.upcoming, 'No upcoming fixtures.', result: false),
+              _matches(
+                'Upcoming fixtures',
+                // Matches whose day has passed without a result are left out.
+                [for (final f in data.upcoming) if (f.status == 'live' || !f.startsAt.isBefore(DateUtils.dateOnly(DateTime.now()))) f],
+                'No upcoming fixtures.',
+                result: false,
+              ),
               const SizedBox(height: 16),
               _matches('Recent results', data.results, 'No results yet.', result: true),
             ],

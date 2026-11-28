@@ -186,9 +186,9 @@ class _TableCard extends StatelessWidget {
                 SiteTableColumn('#', width: 36),
                 SiteTableColumn('School', alignment: Alignment.centerLeft),
                 SiteTableColumn('P', width: 40),
-                SiteTableColumn('W', width: 40),
-                SiteTableColumn('D', width: 40),
-                SiteTableColumn('L', width: 40),
+                SiteTableColumn('W', width: 40, hideOnNarrow: true),
+                SiteTableColumn('D', width: 40, hideOnNarrow: true),
+                SiteTableColumn('L', width: 40, hideOnNarrow: true),
                 SiteTableColumn('PTS', width: 48),
               ],
               rows: [

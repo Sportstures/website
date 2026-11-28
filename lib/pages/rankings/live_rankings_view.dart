@@ -304,8 +304,9 @@ class _LiveRankingsViewState extends State<LiveRankingsView> {
           },
           alignment: Alignment.centerLeft,
         ),
-        if (type != RankingType.regions) const SiteTableColumn('Region', width: 120, alignment: Alignment.centerLeft),
-        SiteTableColumn(middle, width: 90),
+        if (type != RankingType.regions)
+          const SiteTableColumn('Region', width: 120, alignment: Alignment.centerLeft, hideOnNarrow: true),
+        SiteTableColumn(middle, width: 90, hideOnNarrow: true),
         const SiteTableColumn('Points', width: 70),
         const SiteTableColumn('Trend', width: 60),
       ],

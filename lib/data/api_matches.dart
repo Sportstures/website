@@ -95,9 +95,11 @@ class ApiMatchSource {
     }
 
     final fixtures = <Fixture>[];
+    // The backend lists every match without a result, including ones whose day has gone by.
+    final today = DateUtils.dateOnly(DateTime.now());
     for (final f in upcoming) {
       final fixture = toFixture(f);
-      if (fixture != null) fixtures.add(fixture);
+      if (fixture != null && (f['status'] == 'live' || !fixture.startsAt.isBefore(today))) fixtures.add(fixture);
     }
 
     final results = <MatchResult>[];

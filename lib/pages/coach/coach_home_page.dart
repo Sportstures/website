@@ -5,6 +5,7 @@ import '../../api/coach_api.dart';
 import '../../api/match_invitations_api.dart';
 import '../../api/notifications_api.dart';
 import '../../api/session.dart';
+import '../../data/api_matches.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/site/page_hero.dart';
@@ -310,7 +311,8 @@ class _TeamHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final details = [team.sport, team.level, team.school, team.province].whereType<String>().where((s) => s.isNotEmpty).join(' · ');
+    final level = team.level == null ? null : ApiMatchSource.ageGroupLabel(team.level);
+    final details = [team.sport, level, team.school, team.province].whereType<String>().where((s) => s.isNotEmpty).join(' · ');
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: AppColors.green, borderRadius: BorderRadius.circular(10)),
