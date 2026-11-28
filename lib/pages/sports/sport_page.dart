@@ -7,6 +7,7 @@ import '../../utils/formatters.dart';
 import '../../widgets/site/ai_picks_card.dart';
 import '../../widgets/site/ai_summary_cards.dart';
 import '../../widgets/site/match_rows.dart';
+import '../../widgets/site/match_data_builder.dart';
 import '../../widgets/site/page_hero.dart';
 import '../../widgets/site/promo_card.dart';
 import '../../widgets/site/site_routes.dart';
@@ -29,14 +30,22 @@ class SportPage extends StatelessWidget {
     final requested = ModalRoute.of(context)?.settings.arguments;
     final chosen = sport ?? (requested is Sport ? requested : Sport.football);
 
-    final data = SportsData.instance;
+    return MatchDataBuilder(
+      currentRoute: SiteRoutes.sports,
+      title: chosen.label,
+      subtitle: 'Fixtures, results and tables.',
+      builder: (context, data) => _page(context, data, chosen),
+    );
+  }
+
+  Widget _page(BuildContext context, SportsData data, Sport chosen) {
     final fixtures =
         data.fixtures.where((f) => f.sport == chosen).toList(growable: false);
     final results =
         data.results.where((r) => r.fixture.sport == chosen).toList(growable: false);
     final standings = SportsData.standingsFor(results);
     final schools =
-        SportsData.schools.where((s) => s.sports.contains(chosen)).toList(growable: false);
+        data.allSchools.where((s) => s.sports.contains(chosen)).toList(growable: false);
 
     return SiteScaffold(
       currentRoute: SiteRoutes.sports,

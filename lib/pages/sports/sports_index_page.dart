@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../data/models.dart';
 import '../../data/sports_data.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/site/match_data_builder.dart';
 import '../../widgets/site/page_hero.dart';
 import '../../widgets/site/promo_card.dart';
 import '../../widgets/site/site_routes.dart';
@@ -15,8 +16,15 @@ class SportsIndexPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = SportsData.instance;
+    return MatchDataBuilder(
+      currentRoute: SiteRoutes.sports,
+      title: 'Sports',
+      subtitle: 'Every sport played across the Sportstures network.',
+      builder: _page,
+    );
+  }
 
+  Widget _page(BuildContext context, SportsData data) {
     return SiteScaffold(
       currentRoute: SiteRoutes.sports,
       children: [
@@ -53,7 +61,7 @@ class SportsIndexPage extends StatelessWidget {
                             width: width,
                             child: _SportTile(
                               sport: sport,
-                              schools: SportsData.schools
+                              schools: data.allSchools
                                   .where((s) => s.sports.contains(sport))
                                   .length,
                               fixtures:

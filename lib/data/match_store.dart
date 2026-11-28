@@ -43,16 +43,22 @@ class MatchStore extends ChangeNotifier {
 
   /// Loads the data if there is none yet (or it is old). Safe to call from every page.
   Future<void> ensureLoaded() async {
-    if (_source == null || _state == MatchLoad.loading) return;
+    if (_source == null) return;
+    // Someone else is already loading: wait for the same answer.
+    if (_pending != null && _data == null) return _pending;
     final fresh = _loadedAt != null && DateTime.now().difference(_loadedAt!) < staleAfter;
     if (_state == MatchLoad.loaded && fresh) return;
     await reload();
   }
 
+  Future<void>? _pending;
+
   /// Fetches the data again. A failed refresh keeps the data already on screen.
-  Future<void> reload() async {
+  Future<void> reload() => _pending ??= _reload().whenComplete(() => _pending = null);
+
+  Future<void> _reload() async {
     final source = _source;
-    if (source == null || _state == MatchLoad.loading) return;
+    if (source == null) return;
     final hadData = _data != null;
     _state = hadData ? _state : MatchLoad.loading;
     _error = null;
@@ -62,7 +68,7 @@ class MatchStore extends ChangeNotifier {
       _loadedAt = DateTime.now();
       _state = MatchLoad.loaded;
       // The AI cards read their history through this one swap point.
-      aiService = LocalAiService(history: _data!.results);
+      aiService = LocalAiService(history: _data!.results, data: _data);
     } on ApiException catch (e) {
       _error = e.message;
       if (!hadData) _state = MatchLoad.failed;

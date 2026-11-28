@@ -33,6 +33,9 @@ class SportsData {
   final List<String> ageGroupOptions;
   final List<String> leagueOptions;
 
+  /// The schools in THIS data: every registered sample school, or the ones that appear in the matches.
+  late final List<School> allSchools = isSample ? schools : (_schoolsOf(fixtures, results).toSet().toList()..sort((a, b) => a.name.compareTo(b.name)));
+
   /// True for the made-up data that ships with the app.
   bool get isSample => identical(this, instance);
 
