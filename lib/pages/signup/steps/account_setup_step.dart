@@ -12,7 +12,7 @@ class AccountSetupStep extends StatelessWidget {
   static String? passwordProblem(String v) {
     if (v.length < 8) return 'Password must be at least 8 characters';
     if (v.length > 72) return 'Password must be 72 characters or fewer';
-    if (!RegExp(r'[A-Za-z]').hasMatch(v) || !RegExp(r'd').hasMatch(v)) {
+    if (!RegExp(r'[A-Za-z]').hasMatch(v) || !RegExp(r'[0-9]').hasMatch(v)) {
       return 'Use at least one letter and one number';
     }
     return null;
