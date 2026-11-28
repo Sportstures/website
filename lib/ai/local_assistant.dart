@@ -21,7 +21,7 @@ class LocalAssistant {
 
   final LocalAiService _service;
 
-  SportsData get _data => SportsData.instance;
+  SportsData get _data => _service.data ?? SportsData.instance;
 
   AiAnswer answer(String question) {
     final text = question.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\s/]'), ' ');
@@ -327,10 +327,15 @@ class LocalAssistant {
         .firstOrNull;
 
     return AiAnswer(
-      text: '${school.name} is a ${school.type.label.toLowerCase()} school in '
-          '${school.location}, competing in ${school.region}. They field '
-          '${school.sports.length} sports with ${formatThousands(school.athletes)} athletes, '
-          'and have played $played ${played == 1 ? 'match' : 'matches'} so far.',
+      // The backend does not record a school's type or athlete numbers, so only the sample mentions them.
+      text: _data.isSample
+          ? '${school.name} is a ${school.type.label.toLowerCase()} school in '
+              '${school.location}, competing in ${school.region}. They field '
+              '${school.sports.length} sports with ${formatThousands(school.athletes)} athletes, '
+              'and have played $played ${played == 1 ? 'match' : 'matches'} so far.'
+          : '${school.name}${school.region.isEmpty ? '' : ' (${school.region})'} play '
+              '${school.sports.length} ${school.sports.length == 1 ? 'sport' : 'sports'} in the matches I can see, '
+              'with $played finished ${played == 1 ? 'match' : 'matches'}.',
       insights: [
         if (next != null)
           AiInsight(
@@ -362,18 +367,18 @@ class LocalAssistant {
   AiAnswer _fallback() => AiAnswer(
         text: 'I can look up fixtures, results, form and tables from the season so far. '
             'Try naming a school, a sport or a region.',
-        insights: const [
+        insights: [
           AiInsight(
             icon: Icons.event_outlined,
             headline: 'Fixtures',
-            detail: '"When does Northview High play next?" or "What is on this week?"',
+            detail: '"When does ${_example(0)} play next?" or "What is on this week?"',
           ),
           AiInsight(
             icon: Icons.insights_outlined,
             headline: 'Form and tables',
-            detail: '"How is Lakeside Collegiate doing?" or "Who is top in rugby?"',
+            detail: '"How is ${_example(1)} doing?" or "Who is top in rugby?"',
           ),
-          AiInsight(
+          const AiInsight(
             icon: Icons.auto_awesome,
             headline: 'Match-ups',
             detail: 'Name two schools and I will read the match for you.',
@@ -382,12 +387,17 @@ class LocalAssistant {
         suggestions: starterQuestions(),
       );
 
+  /// A real school's name to use in an example question.
+  String _example(int index) {
+    final schools = _data.allSchools;
+    return schools.isEmpty ? 'your school' : schools[index % schools.length].name;
+  }
+
   List<String> starterQuestions() {
-    final leader = SportsData.schools.first;
     return [
       'What is on this week?',
       'Who is top in football?',
-      'How is ${leader.name} doing?',
+      if (_data.allSchools.isNotEmpty) 'How is ${_data.allSchools.first.name} doing?',
       'Which matches are worth watching?',
     ];
   }
@@ -398,13 +408,13 @@ class LocalAssistant {
   /// and the first word, which is distinctive for every school in the data.
   List<School> _schoolsIn(String text) {
     final found = <(int, School)>[];
-    for (final school in SportsData.schools) {
+    for (final school in _data.allSchools) {
       final name = school.name.toLowerCase();
       var at = text.indexOf(name);
       if (at < 0) {
         final first = name.split(' ').first;
         // Guard against a first word that is not distinctive on its own.
-        final shared = SportsData.schools
+        final shared = _data.allSchools
             .where((other) => other.name.toLowerCase().startsWith('$first '))
             .length;
         if (first.length >= 5 && shared == 1) at = text.indexOf(first);
@@ -423,7 +433,7 @@ class LocalAssistant {
   }
 
   String? _regionIn(String text) {
-    for (final region in SportsData.regions) {
+    for (final region in _data.regionOptions) {
       if (text.contains(region.toLowerCase())) return region;
     }
     return null;

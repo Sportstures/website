@@ -371,29 +371,6 @@ class _SignupPanelContent extends StatelessWidget {
             height: 1.5,
           ),
         ),
-        const SizedBox(height: 26),
-        Row(
-          children: [
-            const Text(
-              'Active Leagues',
-              style: TextStyle(
-                color: AppColors.orange,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Container(
-              width: 1,
-              height: 12,
-              margin: const EdgeInsets.symmetric(horizontal: 10),
-              color: Colors.white.withValues(alpha: 0.4),
-            ),
-            const Text(
-              '150+ Schools',
-              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
       ],
     );
   }

@@ -21,9 +21,12 @@ class LocalAiService implements AiService {
   // The field is private and Dart does not allow a private name as a named
   // parameter, so an initializing formal is not available here.
   // ignore: prefer_initializing_formals
-  const LocalAiService({List<MatchResult>? history}) : _history = history;
+  const LocalAiService({List<MatchResult>? history, this.data}) : _history = history;
 
   final List<MatchResult>? _history;
+
+  /// What the assistant answers questions from. Null means the sample data.
+  final SportsData? data;
 
   /// Recent matches read per team. Long enough to be steady, short enough that
   /// a team's current run still moves it.

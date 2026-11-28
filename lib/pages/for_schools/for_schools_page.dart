@@ -5,6 +5,7 @@ import '../../data/sports_data.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/site/page_hero.dart';
+import '../../widgets/site/platform_stats.dart';
 import '../../widgets/site/site_routes.dart';
 import '../../widgets/site/site_scaffold.dart';
 import '../../widgets/site/ui_kit.dart';
@@ -74,18 +75,29 @@ class ForSchoolsPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                StatsBand(
-                  valueColor: AppColors.orange,
-                  stats: [
-                    (Icons.school_outlined, '${SportsData.schools.length}', 'Schools on board'),
-                    (
-                      Icons.calendar_month_outlined,
-                      formatThousands(data.fixtures.length + data.results.length),
-                      'Fixtures managed',
-                    ),
-                    (Icons.sports, '${Sport.values.length}', 'Sports supported'),
-                    (Icons.payments_outlined, 'Free', 'To register'),
-                  ],
+                PlatformStats(
+                  sample: StatsBand(
+                    valueColor: AppColors.orange,
+                    stats: [
+                      (Icons.school_outlined, '${SportsData.schools.length}', 'Schools on board'),
+                      (
+                        Icons.calendar_month_outlined,
+                        formatThousands(data.fixtures.length + data.results.length),
+                        'Fixtures managed',
+                      ),
+                      (Icons.sports, '${Sport.values.length}', 'Sports supported'),
+                      (Icons.payments_outlined, 'Free', 'To register'),
+                    ],
+                  ),
+                  live: (counts) => StatsBand(
+                    valueColor: AppColors.orange,
+                    stats: [
+                      (Icons.school_outlined, formatThousands(counts.schools), 'Schools on board'),
+                      (Icons.scoreboard_outlined, formatThousands(counts.matches), 'Matches played'),
+                      (Icons.sports, '${counts.sports}', 'Sports played'),
+                      (Icons.payments_outlined, 'Free', 'To register'),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 48),
                 const SectionEyebrow('What you get'),

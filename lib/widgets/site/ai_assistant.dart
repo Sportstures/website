@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../ai/ai_provider.dart';
 import '../../ai/ai_service.dart';
+import '../../data/match_store.dart';
 import '../../data/models.dart';
 import '../../theme/app_colors.dart';
 import 'ai_analysis_view.dart';
@@ -113,7 +114,22 @@ class _AssistantPanelState extends State<_AssistantPanel> {
   final _controller = TextEditingController();
   final _scroll = ScrollController();
   final _turns = <_Turn>[];
-  late final List<String> _starters = aiService.starterQuestions();
+  /// Questions that need no school name, for while the matches are still loading.
+  static const _generalStarters = ['What is on this week?', 'Who is top in football?', 'Which matches are worth watching?'];
+
+  List<String> get _starters {
+    final store = MatchScope.maybeOf(context);
+    return store?.api != null && store!.data == null ? _generalStarters : aiService.starterQuestions();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Answers come from the live matches, so fetch them as soon as the panel opens.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) MatchScope.maybeOf(context)?.ensureLoaded();
+    });
+  }
 
   @override
   void dispose() {
@@ -130,7 +146,13 @@ class _AssistantPanelState extends State<_AssistantPanel> {
     setState(() => _turns.add(_Turn.thinking(trimmed)));
     _scrollToEnd();
 
-    final answer = await aiService.ask(trimmed);
+    // Never answer a live site's questions from the sample data.
+    final store = MatchScope.maybeOf(context);
+    if (store?.api != null && store!.data == null) await store.ensureLoaded();
+    if (!mounted) return;
+    final answer = store?.api != null && store!.data == null
+        ? const AiAnswer(text: "I couldn't load the matches just now. Please try again in a moment.")
+        : await aiService.ask(trimmed);
     if (!mounted) return;
 
     setState(() {
