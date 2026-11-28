@@ -190,6 +190,24 @@ class _StandingsViewState extends State<_StandingsView> {
                       const SizedBox(height: 16),
                       TopPerformersCard(sport: query.sport, standings: standings),
                       const SizedBox(height: 16),
+                      SectionCard(
+                        title: 'Competition tables',
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text(
+                                'Each league and cup has its own table, decided by its own rules.',
+                                style: TextStyle(fontSize: 12, height: 1.4),
+                              ),
+                              const SizedBox(height: 10),
+                              SiteButton(label: 'ALL COMPETITIONS', small: true, onPressed: () => openSiteRoute(context, SiteRoutes.competitions)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       const PromoCard(eyebrow: 'Join the champions'),
                     ],
                   ),

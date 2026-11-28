@@ -16,6 +16,7 @@ import 'pages/coach/coach_matches_page.dart';
 import 'pages/coach/coach_notifications_page.dart';
 import 'pages/coach/coach_team_page.dart';
 import 'pages/competitions/competition_page.dart';
+import 'pages/competitions/competitions_page.dart';
 import 'pages/contact/contact_page.dart';
 import 'pages/for_schools/for_schools_page.dart';
 import 'pages/fixtures/fixtures_page.dart';
@@ -121,6 +122,7 @@ class _TobunAppState extends State<TobunApp> {
         SiteRoutes.coachNotifications: (_) => const CoachNotificationsPage(),
         SiteRoutes.coachCompetitions: (_) => const CoachCompetitionsPage(),
         SiteRoutes.competition: (_) => const CompetitionPage(),
+        SiteRoutes.competitions: (_) => const CompetitionsPage(),
         SiteRoutes.help: (_) => const HelpPage(),
         SiteRoutes.terms: (_) => const PolicyPage(policy: Policy.terms),
         SiteRoutes.privacy: (_) => const PolicyPage(policy: Policy.privacy),

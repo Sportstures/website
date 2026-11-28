@@ -14,7 +14,7 @@ class SiteFooter extends StatelessWidget {
   const SiteFooter({super.key});
 
   static final _linkColumns = [
-    ('Quick Links', ['Home', 'Fixtures', 'Results', 'Standings', 'Rankings', 'For Schools', 'About']),
+    ('Quick Links', ['Home', 'Fixtures', 'Results', 'Standings', 'Competitions', 'Rankings', 'For Schools', 'About']),
     // Taken from the sports the platform actually runs, so a link here can
     // never name a sport that has no page behind it.
     ('Sports', [...Sport.values.take(6).map((sport) => sport.label), 'More Sports']),
@@ -48,6 +48,7 @@ class SiteFooter extends StatelessWidget {
     'Fixtures': SiteRoutes.fixtures,
     'Results': SiteRoutes.results,
     'Standings': SiteRoutes.standings,
+    'Competitions': SiteRoutes.competitions,
     'Rankings': SiteRoutes.rankings,
     'For Schools': SiteRoutes.schools,
     'About': SiteRoutes.about,

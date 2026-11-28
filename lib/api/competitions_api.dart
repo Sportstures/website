@@ -55,7 +55,20 @@ class Competition {
     this.status,
     this.teams = 0,
     this.canEdit = false,
+    this.region,
+    this.ageGroup,
+    this.leader,
+    this.roundsPlayed = 0,
+    this.totalRounds = 0,
   });
+
+  final String? region;
+  final String? ageGroup;
+
+  /// The table leader, or the champion once completed. Null before any result.
+  final String? leader;
+  final int roundsPlayed;
+  final int totalRounds;
 
   final int id;
   final String name;
@@ -83,6 +96,11 @@ class Competition {
       teams: json['teams'] is int ? json['teams'] as int : 0,
       rules: json['rules'] is Map ? TableRules.fromJson(Map<String, dynamic>.from(json['rules'] as Map)) : const TableRules(),
       canEdit: json['canEdit'] == true,
+      region: json['region'] as String?,
+      ageGroup: json['ageGroup'] as String?,
+      leader: json['leader'] is Map ? (json['leader'] as Map)['name'] as String? : null,
+      roundsPlayed: (json['roundsPlayed'] as num?)?.toInt() ?? 0,
+      totalRounds: (json['totalRounds'] as num?)?.toInt() ?? 0,
     );
   }
 }
