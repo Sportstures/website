@@ -194,6 +194,13 @@ class _Dashboard extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       SiteButton(label: 'MANAGE SQUAD', small: true, onPressed: () => openSiteRoute(context, SiteRoutes.coachTeam)),
+                      const SizedBox(height: 8),
+                      SiteButton(
+                        label: 'TEAM DETAILS',
+                        small: true,
+                        variant: SiteButtonVariant.outline,
+                        onPressed: () => openSiteRoute(context, SiteRoutes.coachTeamDetails),
+                      ),
                     ],
                   ),
                 ),

@@ -39,6 +39,12 @@ abstract final class SiteRoutes {
   /// Competitions the coach organises, and their table rules.
   static const coachCompetitions = '/coach/competitions';
 
+  /// The signed-in person's details, password and email.
+  static const account = '/account';
+
+  /// The coach's team details and school location.
+  static const coachTeamDetails = '/coach/team-details';
+
   /// Every competition.
   static const competitions = '/competitions';
 

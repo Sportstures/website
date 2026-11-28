@@ -6,6 +6,7 @@ import 'api/session.dart';
 import 'api/token_store.dart';
 import 'data/match_store.dart';
 import 'pages/about/about_page.dart';
+import 'pages/account/account_page.dart';
 import 'pages/auth/forgot_password_page.dart';
 import 'pages/coach/coach_competitions_page.dart';
 import 'pages/coach/coach_home_page.dart';
@@ -14,6 +15,7 @@ import 'pages/coach/coach_live_page.dart';
 import 'pages/coach/coach_match_invites_page.dart';
 import 'pages/coach/coach_matches_page.dart';
 import 'pages/coach/coach_notifications_page.dart';
+import 'pages/coach/coach_team_details_page.dart';
 import 'pages/coach/coach_team_page.dart';
 import 'pages/competitions/competition_page.dart';
 import 'pages/competitions/competitions_page.dart';
@@ -123,6 +125,8 @@ class _TobunAppState extends State<TobunApp> {
         SiteRoutes.coachCompetitions: (_) => const CoachCompetitionsPage(),
         SiteRoutes.competition: (_) => const CompetitionPage(),
         SiteRoutes.competitions: (_) => const CompetitionsPage(),
+        SiteRoutes.account: (_) => const AccountPage(),
+        SiteRoutes.coachTeamDetails: (_) => const CoachTeamDetailsPage(),
         SiteRoutes.help: (_) => const HelpPage(),
         SiteRoutes.terms: (_) => const PolicyPage(policy: Policy.terms),
         SiteRoutes.privacy: (_) => const PolicyPage(policy: Policy.privacy),

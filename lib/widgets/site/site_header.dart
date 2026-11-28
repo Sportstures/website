@@ -212,7 +212,13 @@ class _AuthButtons extends StatelessWidget {
               ),
               child: const Text('MY TEAM'),
             ),
-          Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
+          Tooltip(
+            message: 'My account',
+            child: TextButton(
+              onPressed: () => openSiteRoute(context, SiteRoutes.account),
+              child: Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
+            ),
+          ),
           OutlinedButton(
             onPressed: () async {
               await session.logout();

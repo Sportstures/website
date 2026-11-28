@@ -124,6 +124,15 @@ class Session extends ChangeNotifier {
     if (isSignedIn) await logout();
   }
 
+  /// Takes the new tokens the server sends after a password change.
+  Future<void> signInWith(Map<String, dynamic> answer) => _accept(answer);
+
+  /// Keeps the signed-in person up to date after their details change.
+  void userChanged(Map<String, dynamic> json) {
+    _user = AppUser.fromJson(json);
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     final saved = await api.tokens.read();
     _user = null;
