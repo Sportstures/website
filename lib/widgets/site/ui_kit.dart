@@ -178,7 +178,7 @@ class CountLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      '$count ${count == 1 ? noun : '${noun}s'}'.toUpperCase(),
+      '$count ${count == 1 ? noun : '$noun${noun.endsWith('ch') ? 'es' : 's'}'}'.toUpperCase(),
       style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.muted),
     );
   }

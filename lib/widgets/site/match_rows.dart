@@ -99,6 +99,35 @@ class TeamsLine extends StatelessWidget {
           fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
         );
 
+    Widget stacked(School school, bool bold) => Row(
+          children: [
+            TeamCrest(school: school, size: 22),
+            const SizedBox(width: 8),
+            Expanded(child: Text(school.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: style(bold))),
+          ],
+        );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < _sideBySideWidth) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              stacked(home, homeBold),
+              Padding(padding: const EdgeInsets.symmetric(vertical: 3), child: Center(child: center)),
+              stacked(away, awayBold),
+            ],
+          );
+        }
+        return _sideBySide(style);
+      },
+    );
+  }
+
+  /// Below this, two names beside each other would be cut to a few letters.
+  static const _sideBySideWidth = 360.0;
+
+  Widget _sideBySide(TextStyle Function(bool bold) style) {
     return Row(
       children: [
         Expanded(

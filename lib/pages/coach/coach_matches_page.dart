@@ -207,6 +207,8 @@ class _MyMatchesState extends State<_MyMatches> {
       'postponed' => ('Postponed', AppColors.orange),
       'cancelled' => ('Cancelled', Colors.red.shade700),
       'live' => ('Live', Colors.red),
+      // Played (or due) but with no result recorded yet.
+      _ when DateTime.now().difference(f.startsAt) > const Duration(hours: 3) => ('Awaiting result', AppColors.orange),
       _ => ('Scheduled', AppColors.green),
     };
     const detail = TextStyle(fontSize: 12, color: AppColors.muted, height: 1.45);
